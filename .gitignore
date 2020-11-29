@@ -1,3 +1,7 @@
+fsgui_config_flat.json
+fsgui_config.json
+fsmanager_config.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
