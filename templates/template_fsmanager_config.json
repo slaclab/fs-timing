@@ -11,5 +11,9 @@
     "fehphaseshifterPV" : "",
     "nehphaseshifterPV" : "",
     "fiberoventempPV" : "",
-    "watchdog": ""
+    "watchdog": "",
+    "fehFBEnable": "",
+    "nehFBEnable": "",
+    "fehFBOffset": "",
+    "nehFBOffset": ""
 }
