@@ -42,16 +42,19 @@ class fs_manager():
         self.pcavproc = numpy.zeros(4) # the processed output of the signal processing
         self.soscoeff = signal.iirdesign(wp=0.3,ws=0.5,gpass=0.1,gstop=40.0,output='sos') # basic elliptic low pass
         self.phoffset = {"hxr":0.0,"sxr":0.0}
+        self.flywheelcomplete = False
 
     async def fssleep(self):
         await asyncio.sleep(1.0)
 
     async def updateCablePhaseShifters(self):
-        """ Write new values to the phase shifters based on the processed data and what is enabled (enabled: TODO)."""
-        hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*360.0*476.0e6
-        self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
-        sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*360.0*476.0e6
-        self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
+        """ Write new values to the phase shifters based on the processed data
+        and what is enabled (enabled: TODO)."""
+        if self.flywheelcomplete:
+            hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*1.0e-12*360.0*476.0e6
+            self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
+            sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*1.0e-12*360.0*476.0e6
+            self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
 
     def writeCablePhaseShifter(self, beamline, value):
         """ Write a correction term to the selected cable stabilizer."""
@@ -81,8 +84,11 @@ class fs_manager():
         self.pcavproc[1] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[1]))
         self.pcavproc[2] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[2]))
         self.pcavproc[3] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[3]))
+        if self.pcavdata[0].__len__() > 49 and not self.flywheelcomplete:
+            self.flywheelcomplete = True
         await self.updateCablePhaseShifters()
         return 0
+        
 
     async def disableFeedbackForBeamline(self, beamline):
         """ Turn off cable stabilizer feedbacks for beamline.
@@ -166,4 +172,5 @@ if __name__ == "__main__":
     parser.add_argument("-D", "--debug", action="store_true",help="Print output state, but do not execute")
     parser.add_argument("-S", "--simulation", action="store_true",help="Run the manager code with simulated PVs")
     args = parser.parse_args()
-    asyncio.run(main())
+    # asyncio.run(main()) # changing to python3.6
+    asyncio.get_event_loop().run_until_complete(main())
