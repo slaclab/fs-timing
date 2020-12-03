@@ -10,3 +10,9 @@ This repo contains code and resources used by the various femtosecond timing sys
 - pcav2ttdrift.py - stop gap code for wrapping a laser time feedback on the phase cavity measurements, in lieu of the reference system phase shifters
 - time_tool.py - supplemental code for femto.py that processes the results of x-ray/optical cross-correlator measurements to provide fine scale (<100 fs) drift compensation
 - watchdog.py - utility class used throughout the fstiming codebase for internal watchdog counting and code life-cycle management
+- watchdog3.py - python3 version of the watchdog utility
+- templates:
+  - contains reference templates for config files for fs-timing systems
+- fsmanager_gui.py/.ui - pydm interface
+- fsproto.py - caproto pyioc for development against
+- pid.txt - legacy file included for good luck
