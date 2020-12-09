@@ -158,7 +158,7 @@ class fs_manager():
 
 class config(object):
     def __init__(self,debug=False):
-        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","watchdog"]
+        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","fiberoventempPV","watchdog","fehFBEnable","nehFBEnable","fehFBOffset","nehFBOffset","fehFBGain","nehFBGain","restorePrevious"]
         self.configIsValid = False
         self.pvs = {}
         self.debug = debug
