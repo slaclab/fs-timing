@@ -101,12 +101,23 @@ class fs_manager():
     async def disableFeedbackForBeamline(self, beamline):
         """ Turn off cable stabilizer feedbacks for beamline.
         """
-        pass
+        if beamline == "hxr":
+            self.hxrfeedbackenabled = False
+            self.config.pvs["fehFBEnable"].put(0)
+        elif beamline == "sxr":
+            self.sxrfeedbackenabled = False
+            self.config.pvs["nehFBEnable"].put(0)
+        return 0
 
     async def enableFeedbackForBeamline(self,beamline):
         """ Turn on cable stabilizer feedbacks for beamline.
         """
-        pass
+        if beamline == "hxr":
+            self.hxrfeedbackenabled = True
+            self.config.pvs["fehFBEnable"].put(1)
+        elif beamline == "sxr":
+            self.sxrfeedbackenabled = True
+            self.config.pvs["nehFBEnable"].put(1)
 
     async def loadPreviousPcavValue(self,pcavdeque):
         """ Manage cases of a restart of various components of the system.

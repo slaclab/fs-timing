@@ -18,6 +18,7 @@
         "fehFBOffset": "",
         "nehFBOffset": "",
         "fehFBGain": "",
-        "nehFBGain": ""
+        "nehFBGain": "",
+        "restorePrevious": ""
     }
 }
