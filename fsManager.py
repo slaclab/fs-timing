@@ -43,6 +43,10 @@ class fs_manager():
         self.soscoeff = signal.iirdesign(wp=0.3,ws=0.5,gpass=0.1,gstop=40.0,output='sos') # basic elliptic low pass
         self.phoffset = {"hxr":0.0,"sxr":0.0}
         self.flywheelcomplete = False
+        self.hxrfeedbackenabled = False
+        self.sxrfeedbackenabled = False
+        self.hxrgain = 0.0
+        self.sxrgain = 0.0
 
     async def fssleep(self):
         await asyncio.sleep(1.0)
@@ -51,10 +55,14 @@ class fs_manager():
         """ Write new values to the phase shifters based on the processed data
         and what is enabled (enabled: TODO)."""
         if self.flywheelcomplete:
-            hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*1.0e-12*360.0*476.0e6
-            self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
-            sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*1.0e-12*360.0*476.0e6
-            self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
+            await self.loadCabStabGains()
+            if self.hxrfeedbackenabled:
+                hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*1.0e-12*360.0*476.0e6*self.hxrgain
+                self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
+            if self.sxrfeedbackenabled:
+                sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*1.0e-12*360.0*476.0e6*self.sxrgain
+                self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
+        return 0
 
     def writeCablePhaseShifter(self, beamline, value):
         """ Write a correction term to the selected cable stabilizer."""
@@ -129,6 +137,13 @@ class fs_manager():
     async def loadPcavOffsets(self):
         """ Load pcav offsets from previous values, if needed."""
         pass
+
+    async def loadCabStabGains(self):
+        """ Update the feedback gains from the PVs. """
+        self.hxrgain = self.config.pvs["fehFBGain"].get()
+        self.sxrgain = self.config.pvs["nehFBGain"].get()
+        self.hxrfeedbackenabled = self.config.pvs["fehFBEnable"].get()
+        self.sxrfeedbackenabled = self.config.pvs["nehFBEnable"].get()
 
 class config(object):
     def __init__(self,debug=False):
