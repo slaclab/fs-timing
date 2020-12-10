@@ -68,9 +68,11 @@ class fs_manager():
         """ Write a correction term to the selected cable stabilizer."""
         if not self.debug:
             if beamline=="hxr":
-                self.config.pvs["fehphaseshifterPV"].put(value)
+                current_phase = self.config.pvs["fehphaseshifterPV"].get()
+                self.config.pvs["fehphaseshifterPV"].put(value+current_phase)
             elif beamline=="sxr":
-                self.config.pvs["nehphaseshifterPV"].put(value)
+                current_phase = self.config.pvs["nehphaseshifterPV"].get()
+                self.config.pvs["nehphaseshifterPV"].put(value+current_phase)
         else:
             if beamline=="hxr":
                 print("fehphase would write: %E" % value)
