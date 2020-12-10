@@ -68,11 +68,11 @@ class fs_manager():
         """ Write a correction term to the selected cable stabilizer."""
         if not self.debug:
             if beamline=="hxr":
-                current_phase = self.config.pvs["fehphaseshifterPV"].get()
-                self.config.pvs["fehphaseshifterPV"].put(value+current_phase)
+                ref_feh_phase = self.config.pvs["fehFBOffset"].get()
+                self.config.pvs["fehphaseshifterPV"].put(value+ref_feh_phase)
             elif beamline=="sxr":
-                current_phase = self.config.pvs["nehphaseshifterPV"].get()
-                self.config.pvs["nehphaseshifterPV"].put(value+current_phase)
+                ref_neh_phase = self.config.pvs["nehFBOffset"].get()
+                self.config.pvs["nehphaseshifterPV"].put(value+ref_neh_phase)
         else:
             if beamline=="hxr":
                 print("fehphase would write: %E" % value)
@@ -158,6 +158,13 @@ class fs_manager():
         self.hxrfeedbackenabled = self.config.pvs["fehFBEnable"].get()
         self.sxrfeedbackenabled = self.config.pvs["nehFBEnable"].get()
 
+    async def updateStartingCabStabPhases(self):
+        """ Copy the current phase shifter position to offsets. """
+        self.config.pvs["fehFBOffset"].put(self.config.pvs["fehphaseshifterPV"].get())
+        self.config.pvs["nehFBOffset"].put(self.config.pvs["nehphaseshifterPV"].get())
+        return 0
+
+
 class config(object):
     def __init__(self,debug=False):
         self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","fiberoventempPV","watchdog","fehFBEnable","nehFBEnable","fehFBOffset","nehFBOffset","fehFBGain","nehFBGain","restorePrevious"]
@@ -188,6 +195,7 @@ async def main():
     if watchdogCounter.error:
         return 1
     await fsmgr.zeroPcavOffsets()
+    await fsmgr.updateStartingCabStabPhases()
     while True:
         await fsmgr.updatePcavValues()
         await fsmgr.fssleep()
