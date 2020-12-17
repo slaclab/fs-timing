@@ -196,8 +196,9 @@ async def main():
         return 1
     await fsmgr.zeroPcavOffsets()
     await fsmgr.updateStartingCabStabPhases()
-    while True:
+    while watchdogCounter.error == 0:
         await fsmgr.updatePcavValues()
+        watchdogCounter.check()
         await fsmgr.fssleep()
         # pdb.set_trace()
         # print(fsmgr.pcavdata[0][0],fsmgr.pcavdata[2][0])
