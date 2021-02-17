@@ -25,32 +25,51 @@ from collections import deque
 class time_tool():
     def __init__ (self, sys='NULL',usett=False,usepcav=False,debug=False): 
         """ These definitions do not change from the original."""
-        if sys == 'XPP':  # set up xpp system
-            print('starting XPP')
+        if sys == 'XPP':  # set up xpp system ; JM(2/21) - technically deprecated
+            print('starting XPP pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
             pvname = 'XPP:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS3:VIT:matlab:'  # start of matlab names
             stagename = 'XPP:LAS:MMN:16'  # delay stage for time tool
             ipmname = 'XPP:SB2:BMMON:SUM' # intensity profile monitor PV
-
+            pcavset = "HXR"
         elif sys == 'CXI':  # set up cxi system
-            print('starting CXI')
+            print('starting CXI pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
             pvname = 'CXI:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS5:VIT:matlab:'  # start of matlab names
             stagename = 'CXI:LAS:MMN:04'  # delay stage for time tool
-            ipmname = 'CXI:DG2:BMMON:SUM' # intensity profile monitor PV
-                    
+            ipmname = 'CXI:DG2:BMMON:SUM' # intensity profile monitor PV         
+            pcavset = "HXR"
         elif sys == 'XCS':  # set up xcs system
-            print('starting XCS')
+            print('starting XCS pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
             pvname = 'XCS:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS4:VIT:matlab:'  # start of matlab names
             stagename = 'XCS:LAS:MMN:01'  # delay stage for time tool
             ipmname = 'XCS:SB2:BMMON:SUM' # intensity profile monitor PV
+            pcavset = "HXR"
+        elif sys == 'FS11':  # set up xcs system
+            print('starting FS11 pcav2ttdrift')
+            self.delay = 0.1 # 1 second delay
+            pvname = 'FS11:TIMETOOL:TTALL'  # time tool array name
+            matlab_start = 20 # first matlab pv
+            matlab_prefix = 'LAS:FS11:VIT:matlab:'  # start of matlab names
+            stagename = 'FS11:LAS:MMN:01'  # delay stage for time tool
+            ipmname = 'FS11:SB2:BMMON:SUM' # intensity profile monitor PV
+            pcavset = "HXR"
+        elif sys == 'FS14':  # set up xcs system
+            print('starting FS14 pcav2ttdrift')
+            self.delay = 0.1 # 1 second delay
+            pvname = 'FS14:TIMETOOL:TTALL'  # time tool array name
+            matlab_start = 20 # first matlab pv
+            matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
+            stagename = 'FS14:LAS:MMN:01'  # delay stage for time tool
+            ipmname = 'FS14:SB2:BMMON:SUM' # intensity profile monitor PV
+            pcavset = "SXR"
 
         else:
             print(sys + '  not found, exiting')
@@ -65,7 +84,10 @@ class time_tool():
             print("Using phase cavity drift compensation")
         if debug:
             print("..running in debug mode")
-        pcavpv=['SIOC:UNDH:PT01:0:TIME0','SIOC:UNDH:PT01:0:TIME1'] # PVs for the output time for the two FEH,NC Linac cavities
+        if pcavset == "HXR":
+            pcavpv=['SIOC:UNDH:PT01:0:TIME0','SIOC:UNDH:PT01:0:TIME1'] # PVs for the output time for the two HXR, NC Linac cavities
+        elif pcavset == "SXR":
+            pcavpv=['SIOC:UNDS:PT01:0:TIME0','SIOC:UNDS:PT01:0:TIME1'] # PVs for the output time for the two SXR beamline, NC Linac cavities
         
         self.ttpv = Pv(pvname)
         self.ttpv.connect(timeout=1.0) # connect to pv
