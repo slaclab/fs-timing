@@ -11,6 +11,8 @@ scale drifts that quickly move the laser outside of the time-tool window. In the
 event both drift compensation values are needed, then both input hooks should be
 set to True, and the drift average will be added to the time tool values that
 pass the original time-tool tests.
+
+This is a Python 2 function.
 """
 import time
 from pylab import *
@@ -64,11 +66,11 @@ class time_tool():
         elif sys == 'FS14':  # set up xcs system
             print('starting FS14 pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
-            pvname = 'FS14:TIMETOOL:TTALL'  # time tool array name
+            pvname = 'TMO:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
-            stagename = 'FS14:LAS:MMN:01'  # delay stage for time tool
-            ipmname = 'FS14:SB2:BMMON:SUM' # intensity profile monitor PV
+            stagename = 'LM1K4:COM_MP2_DLY1'  # delay stage for time tool
+            ipmname = 'XGMD:EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
             pcavset = "SXR"
 
         else:
