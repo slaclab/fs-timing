@@ -52,9 +52,9 @@ class time_tool():
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS4:VIT:matlab:'  # start of matlab names
             stagename = 'XCS:LAS:MMN:01'  # delay stage for time tool
-            ipmname = 'XCS:SB2:BMMON:SUM' # intensity profile monitor PV
+            ipmname = 'XCS:SB1:BMMON:SUM' # intensity profile monitor PV
             pcavset = "HXR"
-        elif sys == 'FS11':  # set up xcs system
+        elif sys == 'FS11':  # set up FS11 system
             print('starting FS11 pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
             pvname = 'FS11:TIMETOOL:TTALL'  # time tool array name
@@ -63,14 +63,14 @@ class time_tool():
             stagename = 'FS11:LAS:MMN:01'  # delay stage for time tool
             ipmname = 'FS11:SB2:BMMON:SUM' # intensity profile monitor PV
             pcavset = "HXR"
-        elif sys == 'FS14':  # set up xcs system
+        elif sys == 'FS14':  # set up FS14 system
             print('starting FS14 pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
             pvname = 'TMO:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
             stagename = 'LM1K4:COM_MP2_DLY1'  # delay stage for time tool
-            ipmname = 'XGMD:EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
+            ipmname = 'EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
             pcavset = "SXR"
 
         else:
@@ -112,15 +112,24 @@ class time_tool():
         self.limits = dict() # will hold limits from matlab pvs
         self.old_values = dict() # will hold the old values read from matlab
         self.nm = ['watchdog', 'pix', 'fs', 'amp', 'amp_second', 'ref', 'FWHM', 'Stage', 'ipm','dcsignal','pcavcomp'] #list of internal names
-        for n in range(0,self.nm.__len__+1): # loop over pvs to create
-            base = matlab_prefix + str(n+matlab_start) # base pv name
-            self.matlab_pv[self.nm[n]] = [Pv(base), Pv(base+'.LOW'), Pv(base+'.HIGH'), Pv(base+'.DESC')]  # pv with normal, low and high
+        for nn in range(0,self.nm.__len__()): # loop over pvs to create'
+            base = matlab_prefix + str(nn+matlab_start) # base pv name
+            self.matlab_pv[self.nm[nn]] = [Pv(base), Pv(base+'.LOW'), Pv(base+'.HIGH'), Pv(base+'.DESC')]  # pv with normal, low and high
             for x in range(0,4):
-                self.matlab_pv[self.nm[n]][x].connect(timeout=1.0)  # connnect to all the various PVs.     
+                self.matlab_pv[self.nm[nn]][x].connect(timeout=1.0)  # connnect to all the various PVs.     
             for x in range(0,3):
-                self.matlab_pv[self.nm[n]][x].get(ctrl=True, timeout=1.0)
-            self.matlab_pv[self.nm[n]][3].put(value = self.nm[n], timeout = 1.0)
-        self.W = watchdog.watchdog(self.matlab_pv[self.nm[0]][0]) # initialize watcdog   
+                self.matlab_pv[self.nm[nn]][x].get(ctrl=True, timeout=1.0)
+            self.matlab_pv[self.nm[nn]][3].put(value = self.nm[nn], timeout = 1.0)
+        self.W = watchdog.watchdog(self.matlab_pv[self.nm[0]][0]) # initialize watcdog
+        if self.usepcav:
+            self.pcava.get(ctrl=True, timeout=1.0)
+            self.pcavb.get(ctrl=True, timeout=1.0)
+            #pdb.set_trace()
+            self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0
+            self.old_values['pcavcomp'] = 0
+            self.matlab_pv['pcavcomp'][0].put(value=0, timeout=1.0)
+            #pdb.set_trace()
+            self.pcavscale = 0.001
         
     def read_write(self):
         if self.usett:
@@ -138,7 +147,8 @@ class time_tool():
         if self.usepcav:
             self.pcava.get(ctrl=True, timeout=1.0)
             self.pcavb.get(ctrl=True, timeout=1.0)
-            self.old_values[self.nm['pcavcomp']] = self.matlab_pv[self.nm['pcavcomp']][0].value # old PV values
+            self.matlab_pv['pcavcomp'][0].get(ctrl=True, timeout=1.0)
+            self.old_values['pcavcomp'] = self.matlab_pv['pcavcomp'][0].value # old PV values
         if self.usett:
             if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value):
                 if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ):
@@ -146,11 +156,12 @@ class time_tool():
                         self.dccalc = self.matlab_pv['pix'][0].value
                         # self.matlab_pv['dcsignal'][0].put(value = self.matlab_pv['pix'][0].value, timeout = 1.0)
         if self.usepcav:
-            if self.pcavbuffer.__len__() >= 60:
+            if self.pcavbuffer.__len__() >= 600:
                 self.pcavbuffer.popleft()
-            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0)
-            self.pcavcalc = mean(self.pcavbuffer)-self.old_values[self.nm['pcavcomp']]
-            self.matlab_pv['pcavcomp'][0].put(value = mean(self.pcavbuffer)-self.old_values[self.nm['pcavcomp']])
+            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0-self.pcavinitial)
+            # self.pcavcalc = mean(self.pcavbuffer)-self.old_values['pcavcomp']
+            self.pcavcalc = mean(self.pcavbuffer)*self.pcavscale
+            self.matlab_pv['pcavcomp'][0].put(value = mean(self.pcavbuffer), timeout=1.0)
         if self.debug:
             print('tt + pcav: %f'%self.dccalc+self.pcavcalc)
         else:
@@ -159,7 +170,7 @@ class time_tool():
 
 
 
-def run():  # just a loop to keep recording         
+def run():  # just a loop to keep recording  
     if len(sys.argv) < 2:
         T = time_tool()  # initialize
     else:
@@ -172,7 +183,7 @@ def run():  # just a loop to keep recording
         except:
             del T
             print('crashed, restarting')
-            T = time_tool() # create again
+            T = time_tool(args.system,usett=args.timetool,usepcav=args.pcav,debug=args.debug) # create again
             if T.W.error:
                 return        
     pass  

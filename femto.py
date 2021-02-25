@@ -235,6 +235,7 @@ class PVS():   # creates pvs
         reverse_counter[nm] = 1
         use_secondary_calibration[nm] = 0
         matlab_use = dict()
+        is_atca[nm] = 0
         for n in range(0,20):
             matlab_use[n] = False  # Use new PVs
         # modified for timetool drift draft
@@ -745,7 +746,7 @@ class locker():  # sets up parameters of a particular locking system
         trig = ntrig / self.trigger_f
 
         if self.P.use_drift_correction:
-            dc = self.P.get('drift_correction_signal')
+            dc = self.P.get('drift_correction_signal')*1.0e-6 # TODO need to convert this to a configuration/control parameter
             do = self.P.get('drift_correction_offset') 
             dg = self.P.get('drift_correction_gain')
             ds = self.P.get('drift_correction_smoothing')
@@ -764,8 +765,9 @@ class locker():  # sets up parameters of a particular locking system
                         self.dc_last = dc
             else:
                 self.drift_last = de # initialize to most recent reading
-                self.drift_last = max(-.015, self.drift_last) # floor at 15ps
-                self.drift_last = min(.015, self.drift_last)#
+                # TODO I needed to comment these to get the live code working, but if the units are scaled correctly, shouldn't be a problem
+                #self.drift_last = max(-.015, self.drift_last) # floor at 15ps
+                #self.drift_last = min(.015, self.drift_last)#
                 self.dc_last = dc
                 self.drift_initialized = True # will average next time (ugly)    
 
