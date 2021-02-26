@@ -131,3 +131,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+ref_femto.py
+ref_femtoneh.py
+ref_fsManager.py
+ref_pcav2ttdrift.py
+ref_time_tool.py
+ref_watchdog.py
+ref_watchdog3.py
