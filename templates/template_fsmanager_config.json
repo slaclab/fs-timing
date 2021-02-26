@@ -4,12 +4,21 @@
         "author_date" : "2020_11_25",
         "desc" : "This is a reference template configuration file."
     },
-    "pcav1PV" : "",
-    "pcav2PV" : "",
-    "pcav3PV" : "",
-    "pcav4PV" : "",
-    "fehphaseshifterPV" : "",
-    "nehphaseshifterPV" : "",
-    "fiberoventempPV" : "",
-    "watchdog": ""
+    "pvs" : {
+        "pcav1PV" : "",
+        "pcav2PV" : "",
+        "pcav3PV" : "",
+        "pcav4PV" : "",
+        "fehphaseshifterPV" : "",
+        "nehphaseshifterPV" : "",
+        "fiberoventempPV" : "",
+        "watchdog": "",
+        "fehFBEnable": "",
+        "nehFBEnable": "",
+        "fehFBOffset": "",
+        "nehFBOffset": "",
+        "fehFBGain": "",
+        "nehFBGain": "",
+        "restorePrevious": ""
+    }
 }

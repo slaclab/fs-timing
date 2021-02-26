@@ -425,7 +425,7 @@ class PVS():   # creates pvs
         phase_motor[nm] = base+'MMS:PH' 
         error_pv_name[nm] = dev_base[nm]+'FS_STATUS' 
         version_pv_name[nm] = dev_base[nm]+'FS_WATCHDOG.DESC' 
-        laser_trigger[nm] = 'EVR:LAS:LHN:01:TRIG1:TDES' # was DG2D???  was -39983
+        laser_trigger[nm] = 'EVR:LAS:LHN:04:TRIG1:TDES' # was DG2D???  was -39983
         trig_in_ticks[nm] = 0  # Now using new time invariant trjggers
         reverse_counter[nm] = 1  # start / stop reversed for this laser
         use_secondary_calibration[nm] = 0
@@ -448,9 +448,8 @@ class PVS():   # creates pvs
         use_dither[nm] = False # used to allow fast dither of timing (for special functions)
         dither_level[nm] = 'LAS:FS14:VIT:matlab:08'    
         matlab[nm] = matlab_use
-        
        
-        
+
         while not (self.name in namelist):
             print self.name + '  not found, please enter one of the following '
             for x in namelist:
@@ -550,7 +549,7 @@ class PVS():   # creates pvs
             self.pvlist['drift_correction_offset'] = Pv(drift_correction_offset[self.name])
             self.pvlist['drift_correction_gain'] =  Pv(drift_correction_gain[self.name])
             self.pvlist['drift_correction_smoothing'] =  Pv(drift_correction_smoothing[self.name])
-	    self.pvlist['drift_correction_accum'] = Pv(drift_correction_accum[self.name])
+            self.pvlist['drift_correction_accum'] = Pv(drift_correction_accum[self.name])
         if self.use_dither:
             self.pvlist['dither_level'] = Pv(dither_level[self.name])
        # set up all the matlab PVs
@@ -801,9 +800,9 @@ class locker():  # sets up parameters of a particular locking system
         
     def set_time(self): # sets laser to desired time in ns measured by time interval
         t = self.P.get('time')
-	if math.isnan(t):
-	    self.P.E.write_error('desired time is NaN')
-	    return
+        if math.isnan(t):
+            self.P.E.write_error('desired time is NaN')
+            return
         if t < self.min_time or t > self.max_time:
             self.P.E.write_error('need to move TIC trigger')
             return
@@ -828,15 +827,15 @@ class locker():  # sets up parameters of a particular locking system
             do = self.P.get('drift_correction_offset') 
             dg = self.P.get('drift_correction_gain')
             ds = self.P.get('drift_correction_smoothing')
-	    self.drift_last = self.P.get('drift_correction_value')
-	    accum = self.P.get('drift_correction_accum')
+            self.drift_last = self.P.get('drift_correction_value')
+            accum = self.P.get('drift_correction_accum')
             # modified to not use drift_correction_offset or drift_correction_multiplier:
             de  = (dc-do)  # (hopefully) fresh pix value from TT script
             if ( self.drift_initialized ):
-		if ( dc <> self.dc_last ):           
-		    if ( accum == 1 ): # if drift correction accumulation is enabled
+                if ( dc <> self.dc_last ):           
+                    if ( accum == 1 ): # if drift correction accumulation is enabled
                         #TODO: Pull these limits from the associated matlab PV
-                    	self.drift_last = self.drift_last + (de- self.drift_last) / ds; # smoothing
+                        self.drift_last = self.drift_last + (de- self.drift_last) / ds; # smoothing
                         self.drift_last = max(-.015, self.drift_last) # floor at 15ps
                         self.drift_last = min(.015, self.drift_last)#
                         self.P.put('drift_correction_value', self.drift_last)

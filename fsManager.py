@@ -42,24 +42,37 @@ class fs_manager():
         self.pcavproc = numpy.zeros(4) # the processed output of the signal processing
         self.soscoeff = signal.iirdesign(wp=0.3,ws=0.5,gpass=0.1,gstop=40.0,output='sos') # basic elliptic low pass
         self.phoffset = {"hxr":0.0,"sxr":0.0}
+        self.flywheelcomplete = False
+        self.hxrfeedbackenabled = False
+        self.sxrfeedbackenabled = False
+        self.hxrgain = 0.0
+        self.sxrgain = 0.0
 
     async def fssleep(self):
         await asyncio.sleep(1.0)
 
     async def updateCablePhaseShifters(self):
-        """ Write new values to the phase shifters based on the processed data and what is enabled (enabled: TODO)."""
-        hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*360.0*476.0e6
-        self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
-        sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*360.0*476.0e6
-        self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
+        """ Write new values to the phase shifters based on the processed data
+        and what is enabled (enabled: TODO)."""
+        if self.flywheelcomplete:
+            await self.loadCabStabGains()
+            if self.hxrfeedbackenabled:
+                hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*1.0e-12*360.0*476.0e6*self.hxrgain
+                self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
+            if self.sxrfeedbackenabled:
+                sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*1.0e-12*360.0*476.0e6*self.sxrgain
+                self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
+        return 0
 
     def writeCablePhaseShifter(self, beamline, value):
         """ Write a correction term to the selected cable stabilizer."""
         if not self.debug:
             if beamline=="hxr":
-                self.config.pvs["fehphaseshifterPV"].put(value)
+                ref_feh_phase = self.config.pvs["fehFBOffset"].get()
+                self.config.pvs["fehphaseshifterPV"].put(value+ref_feh_phase)
             elif beamline=="sxr":
-                self.config.pvs["nehphaseshifterPV"].put(value)
+                ref_neh_phase = self.config.pvs["nehFBOffset"].get()
+                self.config.pvs["nehphaseshifterPV"].put(value+ref_neh_phase)
         else:
             if beamline=="hxr":
                 print("fehphase would write: %E" % value)
@@ -81,18 +94,32 @@ class fs_manager():
         self.pcavproc[1] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[1]))
         self.pcavproc[2] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[2]))
         self.pcavproc[3] = numpy.mean(signal.sosfilt(self.soscoeff,self.pcavdata[3]))
+        if self.pcavdata[0].__len__() > 49 and not self.flywheelcomplete:
+            self.flywheelcomplete = True
         await self.updateCablePhaseShifters()
         return 0
+        
 
     async def disableFeedbackForBeamline(self, beamline):
         """ Turn off cable stabilizer feedbacks for beamline.
         """
-        pass
+        if beamline == "hxr":
+            self.hxrfeedbackenabled = False
+            self.config.pvs["fehFBEnable"].put(0)
+        elif beamline == "sxr":
+            self.sxrfeedbackenabled = False
+            self.config.pvs["nehFBEnable"].put(0)
+        return 0
 
     async def enableFeedbackForBeamline(self,beamline):
         """ Turn on cable stabilizer feedbacks for beamline.
         """
-        pass
+        if beamline == "hxr":
+            self.hxrfeedbackenabled = True
+            self.config.pvs["fehFBEnable"].put(1)
+        elif beamline == "sxr":
+            self.sxrfeedbackenabled = True
+            self.config.pvs["nehFBEnable"].put(1)
 
     async def loadPreviousPcavValue(self,pcavdeque):
         """ Manage cases of a restart of various components of the system.
@@ -124,9 +151,23 @@ class fs_manager():
         """ Load pcav offsets from previous values, if needed."""
         pass
 
+    async def loadCabStabGains(self):
+        """ Update the feedback gains from the PVs. """
+        self.hxrgain = self.config.pvs["fehFBGain"].get()
+        self.sxrgain = self.config.pvs["nehFBGain"].get()
+        self.hxrfeedbackenabled = self.config.pvs["fehFBEnable"].get()
+        self.sxrfeedbackenabled = self.config.pvs["nehFBEnable"].get()
+
+    async def updateStartingCabStabPhases(self):
+        """ Copy the current phase shifter position to offsets. """
+        self.config.pvs["fehFBOffset"].put(self.config.pvs["fehphaseshifterPV"].get())
+        self.config.pvs["nehFBOffset"].put(self.config.pvs["nehphaseshifterPV"].get())
+        return 0
+
+
 class config(object):
     def __init__(self,debug=False):
-        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","watchdog"]
+        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","fiberoventempPV","watchdog","fehFBEnable","nehFBEnable","fehFBOffset","nehFBOffset","fehFBGain","nehFBGain","restorePrevious"]
         self.configIsValid = False
         self.pvs = {}
         self.debug = debug
@@ -154,8 +195,10 @@ async def main():
     if watchdogCounter.error:
         return 1
     await fsmgr.zeroPcavOffsets()
-    while True:
+    await fsmgr.updateStartingCabStabPhases()
+    while watchdogCounter.error == 0:
         await fsmgr.updatePcavValues()
+        watchdogCounter.check()
         await fsmgr.fssleep()
         # pdb.set_trace()
         # print(fsmgr.pcavdata[0][0],fsmgr.pcavdata[2][0])
@@ -166,4 +209,5 @@ if __name__ == "__main__":
     parser.add_argument("-D", "--debug", action="store_true",help="Print output state, but do not execute")
     parser.add_argument("-S", "--simulation", action="store_true",help="Run the manager code with simulated PVs")
     args = parser.parse_args()
-    asyncio.run(main())
+    # asyncio.run(main()) # changing to python3.6
+    asyncio.get_event_loop().run_until_complete(main())

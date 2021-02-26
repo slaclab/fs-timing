@@ -1,5 +1,5 @@
-fsgui_config_flat.json
 fsgui_config.json
+fsgui_config_flat.json
 fsmanager_config.json
 
 # Byte-compiled / optimized / DLL files
@@ -131,3 +131,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+ref_femto.py
+ref_femtoneh.py
+ref_fsManager.py
+ref_pcav2ttdrift.py
+ref_time_tool.py
+ref_watchdog.py
+ref_watchdog3.py
