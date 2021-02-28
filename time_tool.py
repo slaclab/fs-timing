@@ -34,7 +34,7 @@ class time_tool():
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS4:VIT:matlab:'  # start of matlab names
             stagename = 'XCS:LAS:MMN:01'  # delay stage for time tool
-            ipmname = 'XCS:SB2:BMMON:SUM' # intensity profile monitor PV
+            ipmname = 'XCS:SB1:BMMON:SUM' # intensity profile monitor PV
 
         elif sys == 'FS11': # set up for new bay 1 laser
             print 'starting FS11'
