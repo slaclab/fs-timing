@@ -40,6 +40,10 @@ class MyDisplay(Display):
         self.ui.nehfbenable_ctl.currentIndexChanged.connect(lambda: self.fbenable_toggle(self.config["pvs"]["nehFBEnable"],self.ui.nehfbenable_ctl.currentIndex()))
         self.ui.nehfbenable_ctl.setEnabled(True)
         self.updateEnableState()
+        self.ui.zerofehoffsets_push.channel = "ca://" + self.config["pvs"]["fehFBRequestZero"]
+        self.ui.zerofehoffsets_push.pressValue = 1
+        self.ui.zeronehoffsets_push.channel = "ca://" + self.config["pvs"]["nehFBRequestZero"]
+        self.ui.zeronehoffsets_push.pressValue = 1
         # self.ui.help_push.connect(self.displayhelp)
         # self.hxrenable = epics.PV(self.config["pvs"]["fehFBEnable"])
         # self.sxrenable = epics.PV(self.config["pvs"]["nehFBEnable"])
@@ -55,35 +59,7 @@ class MyDisplay(Display):
         print("%s fb change to %i" %(pv,ii))
         pass
 
-    # def displayhelp(self):
-
-
-class MyWidget(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
-
-        self.button = QtWidgets.QPushButton("Click me!")
-        self.text = QtWidgets.QLabel("Hello World",
-                                     alignment=QtCore.Qt.AlignCenter)
-
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
-        self.setLayout(self.layout)
-
-        self.button.clicked.connect(self.magic)
-
-    @QtCore.Slot()
-    def magic(self):
-        self.text.setText(random.choice(self.hello))
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication([])
-
-    widget = MyWidget()
-    widget.resize(800, 600)
-    widget.show()
-
-    sys.exit(app.exec_())
+    def zeroCurrentOffsets(self,pv):
+        """ Write a request to zero the pcav offsets to the controller code.
+        """
+        epics.PV(pv).put(value=1)

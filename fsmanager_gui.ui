@@ -73,7 +73,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>v.0.1</string>
+    <string>v.1.0</string>
    </property>
   </widget>
   <widget class="QGroupBox" name="groupBox">
@@ -154,6 +154,9 @@
     <property name="showUnits" stdset="0">
      <bool>true</bool>
     </property>
+    <property name="displayFormat" stdset="0">
+     <enum>PyDMLabel::Decimal</enum>
+    </property>
    </widget>
    <widget class="QLabel" name="label_5">
     <property name="geometry">
@@ -196,6 +199,9 @@
     <property name="showUnits" stdset="0">
      <bool>true</bool>
     </property>
+    <property name="displayFormat" stdset="0">
+     <enum>PyDMLabel::Decimal</enum>
+    </property>
    </widget>
    <widget class="PyDMLabel" name="hxrpcav2val">
     <property name="geometry">
@@ -211,6 +217,9 @@
     </property>
     <property name="showUnits" stdset="0">
      <bool>true</bool>
+    </property>
+    <property name="displayFormat" stdset="0">
+     <enum>PyDMLabel::Decimal</enum>
     </property>
    </widget>
   </widget>
@@ -330,6 +339,12 @@
    <property name="toolTip">
     <string/>
    </property>
+   <property name="precisionFromPV" stdset="0">
+    <bool>false</bool>
+   </property>
+   <property name="displayFormat" stdset="0">
+    <enum>PyDMLineEdit::Decimal</enum>
+   </property>
   </widget>
   <widget class="PyDMLineEdit" name="nehfboffset_val">
    <property name="geometry">
@@ -342,6 +357,15 @@
    </property>
    <property name="toolTip">
     <string/>
+   </property>
+   <property name="precision" stdset="0">
+    <number>5</number>
+   </property>
+   <property name="precisionFromPV" stdset="0">
+    <bool>false</bool>
+   </property>
+   <property name="displayFormat" stdset="0">
+    <enum>PyDMLineEdit::Decimal</enum>
    </property>
   </widget>
   <widget class="PyDMLineEdit" name="fehfbgain_val">
@@ -356,6 +380,9 @@
    <property name="toolTip">
     <string/>
    </property>
+   <property name="displayFormat" stdset="0">
+    <enum>PyDMLineEdit::Decimal</enum>
+   </property>
   </widget>
   <widget class="PyDMLineEdit" name="nehfbgain_val">
    <property name="geometry">
@@ -369,12 +396,15 @@
    <property name="toolTip">
     <string/>
    </property>
+   <property name="displayFormat" stdset="0">
+    <enum>PyDMLineEdit::Decimal</enum>
+   </property>
   </widget>
-  <widget class="PyDMPushButton" name="zerooffsets_push">
+  <widget class="PyDMPushButton" name="zerofehoffsets_push">
    <property name="geometry">
     <rect>
-     <x>110</x>
-     <y>510</y>
+     <x>580</x>
+     <y>450</y>
      <width>121</width>
      <height>23</height>
     </rect>
@@ -523,6 +553,38 @@
    </property>
    <property name="text">
     <string>Enable/Disable</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>420</y>
+     <width>671</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="PyDMPushButton" name="zeronehoffsets_push">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>480</y>
+     <width>121</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="accessibleName">
+    <string>Zero Offsets</string>
+   </property>
+   <property name="text">
+    <string>Zero Offsets</string>
    </property>
   </widget>
  </widget>

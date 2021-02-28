@@ -11,7 +11,7 @@
         "pcav4PV" : "fsioc:pcav4",
         "fehphaseshifterPV" : "fsioc:fehps",
         "nehphaseshifterPV" : "fsioc:nehps",
-        "fiberoventempPV" : "",
+        "fiberoventempPV" : "fsioc:fiberoven",
         "watchdog": "fsioc:watchdog",
         "fehFBEnable": "fsioc:fehfbenable",
         "nehFBEnable": "fsioc:nehfbenable",
@@ -19,6 +19,8 @@
         "nehFBOffset": "fsioc:nehfboffset",
         "fehFBGain": "fsioc:fehfbgain",
         "nehFBGain": "fsioc:nehfbgain",
-        "restorePrevious": "fsioc:restoreprev"
+        "restorePrevious": "fsioc:restoreprev",
+        "fehFBRequestZero": "fsioc:fehoffsetreq",
+        "nehFBRequestZero": "fsioc:nehoffsetreq"
     }
 }

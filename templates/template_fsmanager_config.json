@@ -19,6 +19,8 @@
         "nehFBOffset": "",
         "fehFBGain": "",
         "nehFBGain": "",
-        "restorePrevious": ""
+        "restorePrevious": "",
+        "fehFBRequestZero": "",
+        "nehFBRequestZero": ""
     }
 }

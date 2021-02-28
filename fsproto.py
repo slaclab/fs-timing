@@ -49,6 +49,9 @@ class fsioc(PVGroup):
     fehfbgain = pvproperty(value = 1.0, doc="feh gain")
     nehfbgain = pvproperty(value = 1.0, doc="neh gain")
     restoreprev = pvproperty(value = 0.0, doc="restore previous")
+    fehoffsetreq = pvproperty(value = 0.0, doc="offset zero requested for feh")
+    nehoffsetreq = pvproperty(value = 0.0, doc="offset zero requested for neh")
+    fiberoven = pvproperty(value = 0.0, doc="fiber oven temp")
 
     @tt.startup
     async def tt(self, instance, async_lib):

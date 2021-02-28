@@ -32,9 +32,10 @@ import pdb
 
 class fs_manager():
     """Manages pcav feedback to cable stabilizer, monitors fiber oven."""
-    def __init__(self,debug=False):
+    def __init__(self,debug=False,sim=False):
         self.debug = debug
-        self.config = config(debug=self.debug)
+        self.sim = sim
+        self.config = config(debug=self.debug,sim=self.sim)
         self.config.loadConfig()
         self.pcavdata = []
         for ii in range(0,4):
@@ -141,8 +142,10 @@ class fs_manager():
             print("zeroing pcav offsets for %s" % beamline.upper())
         if beamline=="hxr":
             self.phoffset["hxr"]= numpy.mean([self.config.pvs["pcav1PV"].get(),self.config.pvs["pcav2PV"].get()])
+            self.config.pvs["fehFBOffset"].put(value=self.phoffset["hxr"])      
         elif beamline=="sxr":
             self.phoffset["sxr"]= numpy.mean([self.config.pvs["pcav3PV"].get(),self.config.pvs["pcav4PV"].get()])
+            self.config.pvs["nehFBOffset"].put(value=self.phoffset["sxr"])  
         return 0
         # update dc offset to phase shifter delta correction term
         # save these offsets to local values
@@ -164,17 +167,45 @@ class fs_manager():
         self.config.pvs["nehFBOffset"].put(self.config.pvs["nehphaseshifterPV"].get())
         return 0
 
+    async def updateState(self):
+        """ Function to monitor and respond to differences in state. """
+        # if self.config.pvs["fehFBEnable"].get().value() != 0:
+        #     self.hxrfeedbackenabled = True
+        # else
+        #     self.hxrfeedbackenabled = False
+        # if self.config.pvs["nehFBEnable"].get().value() != 0:
+        #     self.sxrfeedbackenabled = True
+        # else
+        #     self.sxrfeedbackenabled = False
+        if self.config.pvs["fehFBRequestZero"].get() != 0:
+            await self.zeroPcavOffsetForBeamline("hxr")
+            self.config.pvs["fehFBRequestZero"].put(value=0)
+        if self.config.pvs["nehFBRequestZero"].get() != 0:
+            await self.zeroPcavOffsetForBeamline("sxr")
+            self.config.pvs["nehFBRequestZero"].put(value=0)
+        self.phoffset["hxr"] = self.config.pvs["fehFBOffset"].get()
+        self.phoffset["sxr"] = self.config.pvs["nehFBOffset"].get()
+        self.hxrgain = self.config.pvs["fehFBGain"].get()
+        self.sxrgain = self.config.pvs["nehFBGain"].get()
+        self.hxrfeedbackenabled = self.config.pvs["fehFBEnable"].get()
+        self.sxrfeedbackenabled = self.config.pvs["nehFBEnable"].get()
+
 
 class config(object):
-    def __init__(self,debug=False):
-        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","fiberoventempPV","watchdog","fehFBEnable","nehFBEnable","fehFBOffset","nehFBOffset","fehFBGain","nehFBGain","restorePrevious"]
+    def __init__(self,debug=False,sim=False):
+        self.pvstrlist = ["pcav1PV","pcav2PV","pcav3PV","pcav4PV","fehphaseshifterPV","nehphaseshifterPV","fiberoventempPV","watchdog","fehFBEnable","nehFBEnable","fehFBOffset","nehFBOffset","fehFBGain","nehFBGain","restorePrevious","fehFBRequestZero","nehFBRequestZero"]
         self.configIsValid = False
         self.pvs = {}
         self.debug = debug
+        self.sim = sim
     
     def loadConfig(self):
-        with open("fsmanager_config.json",'r') as fp:
-            self.inputjson = json.load(fp)
+        if self.sim:
+            with open("proto_fsmanager_config.json",'r') as fp:
+                self.inputjson = json.load(fp)
+        else:
+            with open("fsmanager_config.json",'r') as fp:
+                self.inputjson = json.load(fp)
         for pvstr in self.pvstrlist:
             if pvstr not in self.inputjson["pvs"].keys():
                 print("configuration file poorly formatted: %s" % pvstr)
@@ -190,13 +221,14 @@ class config(object):
             print('loadConfig: completed')
 
 async def main():
-    fsmgr = fs_manager(debug=args.debug)
+    fsmgr = fs_manager(debug=args.debug,sim=args.simulation)
     watchdogCounter = watchdog3.watchdog(fsmgr.config.pvs["watchdog"])
     if watchdogCounter.error:
         return 1
     await fsmgr.zeroPcavOffsets()
     await fsmgr.updateStartingCabStabPhases()
     while watchdogCounter.error == 0:
+        await fsmgr.updateState()
         await fsmgr.updatePcavValues()
         watchdogCounter.check()
         await fsmgr.fssleep()

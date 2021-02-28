@@ -45,6 +45,15 @@ class time_tool():
             stagename = 'XPP:LAS:MMN:16'  # delay stage for time tool
             ipmname = 'XPP:SB2:BMMON:SUM' # intensity profile monitor PV
 
+        elif sys == 'FS14':  # set up FS14 system
+            print('starting FS14 pcav2ttdrift')
+            self.delay = 0.1 # 1 second delay
+            pvname = 'TMO:TIMETOOL:TTALL'  # time tool array name
+            matlab_start = 20 # first matlab pv
+            matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
+            stagename = 'LM1K4:COM_MP2_DLY1'  # delay stage for time tool
+            ipmname = 'EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
+
         else:
             print sys + '  not found, exiting'
             exit()
