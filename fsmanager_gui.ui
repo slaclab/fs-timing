@@ -535,7 +535,12 @@
    </property>
    <property name="filenames" stdset="0">
     <stringlist>
-     <string>fsmanager_gui_help.ui</string>
+     <string>pydm_jm_help.ui</string>
+    </stringlist>
+   </property>
+   <property name="macros" stdset="0">
+    <stringlist>
+     <string>src=fsmanager_gui_help.html</string>
     </stringlist>
    </property>
    <property name="openInNewWindow" stdset="0">
