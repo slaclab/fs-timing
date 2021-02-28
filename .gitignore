@@ -1,6 +1,7 @@
 fsgui_config.json
 fsgui_config_flat.json
 fsmanager_config.json
+startdev.bat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

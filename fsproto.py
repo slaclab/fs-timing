@@ -7,6 +7,8 @@ External dependencies:
 - caproto
 - numpy
 
+Developed on a local fsenv (not in version control).
+
 """
 
 from caproto.server import pvproperty, PVGroup, ioc_arg_parser, run
@@ -40,6 +42,13 @@ class fsioc(PVGroup):
     fehphase = pvproperty(value = 0.0, doc="feh phase") # additional PVs for calculated phase, if needed
     nehphase = pvproperty(value = 0.0, doc="neh phase") # ...
     watchdog = pvproperty(value = 1, doc="simulation watchdog")
+    fehfbenable = pvproperty(value = 0.0, doc="feh enable")
+    nehfbenable = pvproperty(value = 0.0, doc="neh enable")
+    fehfboffset = pvproperty(value = -10.0, doc="feh offset")
+    nehfboffset = pvproperty(value = 2.0, doc="neh offset")
+    fehfbgain = pvproperty(value = 1.0, doc="feh gain")
+    nehfbgain = pvproperty(value = 1.0, doc="neh gain")
+    restoreprev = pvproperty(value = 0.0, doc="restore previous")
 
     @tt.startup
     async def tt(self, instance, async_lib):

@@ -7,13 +7,16 @@
     <x>0</x>
     <y>0</y>
     <width>740</width>
-    <height>439</height>
+    <height>546</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="exit_push">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>640</x>
@@ -26,20 +29,10 @@
     <string>Exit</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
-   <property name="geometry">
-    <rect>
-     <x>550</x>
-     <y>30</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
+  <widget class="QPushButton" name="iocdetails_push">
+   <property name="enabled">
+    <bool>false</bool>
    </property>
-   <property name="text">
-    <string>Help...</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_3">
    <property name="geometry">
     <rect>
      <x>460</x>
@@ -121,33 +114,45 @@
      <string>SXR 2</string>
     </property>
    </widget>
-   <widget class="PyDMLabel" name="PyDMLabel_7">
+   <widget class="PyDMLabel" name="sxrpcav1val">
     <property name="geometry">
      <rect>
       <x>80</x>
       <y>30</y>
-      <width>52</width>
-      <height>13</height>
+      <width>91</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="toolTip">
      <string/>
+    </property>
+    <property name="precision" stdset="0">
+     <number>0</number>
+    </property>
+    <property name="showUnits" stdset="0">
+     <bool>true</bool>
     </property>
     <property name="channel" stdset="0">
      <string>ca://fsioc:pcav1PV</string>
     </property>
+    <property name="displayFormat" stdset="0">
+     <enum>PyDMLabel::Decimal</enum>
+    </property>
    </widget>
-   <widget class="PyDMLabel" name="PyDMLabel_8">
+   <widget class="PyDMLabel" name="sxrpcav2val">
     <property name="geometry">
      <rect>
       <x>80</x>
       <y>50</y>
-      <width>52</width>
-      <height>13</height>
+      <width>91</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="toolTip">
      <string/>
+    </property>
+    <property name="showUnits" stdset="0">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label_5">
@@ -176,58 +181,38 @@
      <string>HXR 2</string>
     </property>
    </widget>
-   <widget class="PyDMLabel" name="PyDMLabel_5">
+   <widget class="PyDMLabel" name="hxrpcav1val">
     <property name="geometry">
      <rect>
       <x>260</x>
       <y>30</y>
-      <width>52</width>
-      <height>13</height>
+      <width>91</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="toolTip">
      <string/>
     </property>
+    <property name="showUnits" stdset="0">
+     <bool>true</bool>
+    </property>
    </widget>
-   <widget class="PyDMLabel" name="PyDMLabel_6">
+   <widget class="PyDMLabel" name="hxrpcav2val">
     <property name="geometry">
      <rect>
       <x>260</x>
       <y>50</y>
-      <width>52</width>
-      <height>13</height>
+      <width>91</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="toolTip">
      <string/>
     </property>
+    <property name="showUnits" stdset="0">
+     <bool>true</bool>
+    </property>
    </widget>
-  </widget>
-  <widget class="PyDMTimePlot" name="PyDMTimePlot">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>210</y>
-     <width>351</width>
-     <height>211</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-  </widget>
-  <widget class="PyDMTimePlot" name="PyDMTimePlot_2">
-   <property name="geometry">
-    <rect>
-     <x>380</x>
-     <y>210</y>
-     <width>341</width>
-     <height>211</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
   </widget>
   <widget class="QLabel" name="label_7">
    <property name="geometry">
@@ -250,7 +235,7 @@
     <rect>
      <x>20</x>
      <y>190</y>
-     <width>131</width>
+     <width>311</width>
      <height>16</height>
     </rect>
    </property>
@@ -260,7 +245,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Processed PCAV Data</string>
+    <string>Processed PCAV Data (Plotting not implemented yet)</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_9">
@@ -281,6 +266,265 @@
     <string>Cable Stabilizer Phase Control</string>
    </property>
   </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>450</y>
+     <width>61</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>FEH Offset</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>480</y>
+     <width>61</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>NEH Offset</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_12">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>480</y>
+     <width>47</width>
+     <height>13</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>NEH Gain</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>450</y>
+     <width>47</width>
+     <height>13</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>FEH Gain</string>
+   </property>
+  </widget>
+  <widget class="PyDMLineEdit" name="fehfboffset_val">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>450</y>
+     <width>133</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+  </widget>
+  <widget class="PyDMLineEdit" name="nehfboffset_val">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>480</y>
+     <width>133</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+  </widget>
+  <widget class="PyDMLineEdit" name="fehfbgain_val">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>450</y>
+     <width>133</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+  </widget>
+  <widget class="PyDMLineEdit" name="nehfbgain_val">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>480</y>
+     <width>133</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+  </widget>
+  <widget class="PyDMPushButton" name="zerooffsets_push">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>510</y>
+     <width>121</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="accessibleName">
+    <string>Zero Offsets</string>
+   </property>
+   <property name="text">
+    <string>Zero Offsets</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_14">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>510</y>
+     <width>201</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Write current pcav values as new offset</string>
+   </property>
+  </widget>
+  <widget class="PyDMEnumComboBox" name="fehfbenable_ctl">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>450</y>
+     <width>69</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>ArrowCursor</cursorShape>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="editable">
+    <bool>false</bool>
+   </property>
+   <property name="currentText">
+    <string/>
+   </property>
+   <property name="currentIndex">
+    <number>-1</number>
+   </property>
+   <property name="maxVisibleItems">
+    <number>2</number>
+   </property>
+   <property name="maxCount">
+    <number>2</number>
+   </property>
+  </widget>
+  <widget class="PyDMEnumComboBox" name="nehfbenable_ctl">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>480</y>
+     <width>69</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>ArrowCursor</cursorShape>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="currentIndex">
+    <number>-1</number>
+   </property>
+   <property name="maxVisibleItems">
+    <number>2</number>
+   </property>
+   <property name="maxCount">
+    <number>2</number>
+   </property>
+  </widget>
+  <widget class="QWebEngineView" name="webEngineView">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>210</y>
+     <width>300</width>
+     <height>200</height>
+    </rect>
+   </property>
+   <property name="url">
+    <url>
+     <string>about:blank</string>
+    </url>
+   </property>
+  </widget>
+  <widget class="QWebEngineView" name="webEngineView_2">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>210</y>
+     <width>300</width>
+     <height>200</height>
+    </rect>
+   </property>
+   <property name="url">
+    <url>
+     <string>about:blank</string>
+    </url>
+   </property>
+  </widget>
+  <widget class="PyDMRelatedDisplayButton" name="help_push">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>30</y>
+     <width>71</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="text">
+    <string>Help...</string>
+   </property>
+   <property name="filenames" stdset="0">
+    <stringlist>
+     <string>fsmanager_gui_help.ui</string>
+    </stringlist>
+   </property>
+   <property name="openInNewWindow" stdset="0">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_15">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>430</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Enable/Disable</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -289,9 +533,29 @@
    <header>pydm.widgets.label</header>
   </customwidget>
   <customwidget>
-   <class>PyDMTimePlot</class>
-   <extends>QGraphicsView</extends>
-   <header>pydm.widgets.timeplot</header>
+   <class>PyDMEnumComboBox</class>
+   <extends>QComboBox</extends>
+   <header>pydm.widgets.enum_combo_box</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>pydm.widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMRelatedDisplayButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.related_display_button</header>
+  </customwidget>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
   </customwidget>
  </customwidgets>
  <resources/>
