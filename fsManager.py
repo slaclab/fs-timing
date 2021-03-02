@@ -141,10 +141,10 @@ class fs_manager():
         if self.debug:
             print("zeroing pcav offsets for %s" % beamline.upper())
         if beamline=="hxr":
-            self.phoffset["hxr"]= numpy.mean([self.config.pvs["pcav1PV"].get(),self.config.pvs["pcav2PV"].get()])
+            self.phoffset["hxr"]= self.phoffset["hxr"] + numpy.mean([self.config.pvs["pcav1PV"].get(),self.config.pvs["pcav2PV"].get()])
             self.config.pvs["fehFBOffset"].put(value=self.phoffset["hxr"])      
         elif beamline=="sxr":
-            self.phoffset["sxr"]= numpy.mean([self.config.pvs["pcav3PV"].get(),self.config.pvs["pcav4PV"].get()])
+            self.phoffset["sxr"]= self.phoffset["sxr"] + numpy.mean([self.config.pvs["pcav3PV"].get(),self.config.pvs["pcav4PV"].get()])
             self.config.pvs["nehFBOffset"].put(value=self.phoffset["sxr"])  
         return 0
         # update dc offset to phase shifter delta correction term
