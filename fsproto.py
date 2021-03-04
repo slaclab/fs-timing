@@ -26,8 +26,10 @@ class fsioc(PVGroup):
     beam_drift = 1.0e-13 # the slower beam drift (representative)
     prevValues = np.zeros(4) # array to hold previous values in case iterative processing is needed
     dfreq = 1.0/60.0 # frequency (ie. time-constant) for beam drift
-    dt = 1.0
-
+    dt = 0.1
+    srcdatapath = "../fstimingrsc/URCPOsco.csv"
+    srcdata = np.genfromtxt(srcdatapath,delimiter=',',skip_header=True,unpack=True,usecols=(1,2))
+    ii = 0
     tt = pvproperty(value=1.0)
     pcav1 = pvproperty(value =0.0, doc='pcav1 pv')
     pcav1gen = random.Random()
@@ -60,18 +62,26 @@ class fsioc(PVGroup):
         await self.watchdog.write(value=self.watchdog.value+1)
         while True:
             tt = self.tt.value + self.dt
-            await self.pcavupdate(instance=[self.pcav1gen,self.pcav1])
-            await self.pcavupdate(instance=[self.pcav2gen,self.pcav2])
+            # await self.pcavupdate(instance=[self.pcav1gen,self.pcav1])
+            # await self.pcavupdate(instance=[self.pcav2gen,self.pcav2])
+            await self.pcavrealupdate(instance=[0,self.pcav1])
+            await self.pcavrealupdate(instance=[1,self.pcav2])
             await self.pcavupdate(instance=[self.pcav3gen,self.pcav3])
             await self.pcavupdate(instance=[self.pcav4gen,self.pcav4])
             await instance.write(value=tt)
             await self.phaseUpdate()
+            self.ii = self.ii + 1
+            if self.ii == self.srcdata[0].__len__()-1:
+                self.ii = 0
             await async_lib.library.sleep(self.dt)
     
     async def pcavupdate(self, instance):
         newvalue = instance[1].value + instance[0].gauss(0,self.beam_tjitter) + self.beam_drift*np.sin(2*np.pi*self.dfreq*self.tt.value)
         #print(newvalue)
         await instance[1].write(value=newvalue)
+
+    async def pcavrealupdate(self,instance):
+        await instance[1].write(value=self.srcdata[instance[0]][self.ii])
 
     async def phaseUpdate(self):
         # pdb.set_trace()

@@ -41,7 +41,7 @@ class fs_manager():
         for ii in range(0,4):
             self.pcavdata.append(deque([],maxlen=50)) # these vectors hold the recent pcav data for filtering
         self.pcavproc = numpy.zeros(4) # the processed output of the signal processing
-        self.soscoeff = signal.iirdesign(wp=0.3,ws=0.5,gpass=0.1,gstop=40.0,output='sos') # basic elliptic low pass
+        self.soscoeff = signal.iirdesign(wp=0.3,ws=0.5,gpass=0.1,gstop=40.0,ftype='butter',output='sos') # basic elliptic low pass
         self.phoffset = {"hxr":0.0,"sxr":0.0}
         self.flywheelcomplete = False
         self.hxrfeedbackenabled = False
@@ -58,10 +58,10 @@ class fs_manager():
         if self.flywheelcomplete:
             await self.loadCabStabGains()
             if self.hxrfeedbackenabled:
-                hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])- self.phoffset["hxr"])*1.0e-12*360.0*476.0e6*self.hxrgain
+                hxrcorrection = (numpy.mean([self.pcavproc[0],self.pcavproc[1]])*self.hxrgain - self.phoffset["hxr"])*1.0e-12*360.0*476.0e6
                 self.writeCablePhaseShifter(beamline="hxr",value=hxrcorrection)
             if self.sxrfeedbackenabled:
-                sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])- self.phoffset["sxr"])*1.0e-12*360.0*476.0e6*self.sxrgain
+                sxrcorrection = (numpy.mean([self.pcavproc[2],self.pcavproc[3]])*self.sxrgain - self.phoffset["sxr"])*1.0e-12*360.0*476.0e6
                 self.writeCablePhaseShifter(beamline="sxr",value=sxrcorrection)
         return 0
 
