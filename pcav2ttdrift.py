@@ -35,6 +35,7 @@ class time_tool():
             matlab_prefix = 'LAS:FS3:VIT:matlab:'  # start of matlab names
             stagename = 'XPP:LAS:MMN:16'  # delay stage for time tool
             ipmname = 'XPP:SB2:BMMON:SUM' # intensity profile monitor PV
+            pixscale = 1.0e-6
             pcavset = "HXR"
         elif sys == 'CXI':  # set up cxi system
             print('starting CXI pcav2ttdrift')
@@ -44,6 +45,7 @@ class time_tool():
             matlab_prefix = 'LAS:FS5:VIT:matlab:'  # start of matlab names
             stagename = 'CXI:LAS:MMN:04'  # delay stage for time tool
             ipmname = 'CXI:DG2:BMMON:SUM' # intensity profile monitor PV         
+            pixscale = 1.0e-6
             pcavset = "HXR"
         elif sys == 'XCS':  # set up xcs system
             print('starting XCS pcav2ttdrift')
@@ -53,15 +55,17 @@ class time_tool():
             matlab_prefix = 'LAS:FS4:VIT:matlab:'  # start of matlab names
             stagename = 'XCS:LAS:MMN:01'  # delay stage for time tool
             ipmname = 'XCS:SB1:BMMON:SUM' # intensity profile monitor PV
+            pixscale = 1.0e-6
             pcavset = "HXR"
         elif sys == 'FS11':  # set up FS11 system
             print('starting FS11 pcav2ttdrift')
             self.delay = 0.1 # 1 second delay
-            pvname = 'FS11:TIMETOOL:TTALL'  # time tool array name
+            pvname = 'XPP:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS11:VIT:matlab:'  # start of matlab names
-            stagename = 'FS11:LAS:MMN:01'  # delay stage for time tool
-            ipmname = 'FS11:SB2:BMMON:SUM' # intensity profile monitor PV
+            stagename = 'XPP:LAS:MMN:01'  # delay stage for time tool
+            ipmname = 'XPP:SB2:BMMON:SUM' # intensity profile monitor PV
+            pixscale = 1.0e-6
             pcavset = "HXR"
         elif sys == 'FS14':  # set up FS14 system
             print('starting FS14 pcav2ttdrift')
@@ -71,6 +75,7 @@ class time_tool():
             matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
             stagename = 'LM1K4:COM_MP2_DLY1'  # delay stage for time tool
             ipmname = 'EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
+            pixscale = 2.0e-6
             pcavset = "SXR"
 
         else:
@@ -153,7 +158,7 @@ class time_tool():
             if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value):
                 if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ):
                     if ( self.matlab_pv['pix'][0].value <> self.old_values['pix'] ) and ( self.matlab_pv['Stage'][0].value == self.old_values['Stage'] ):
-                        self.dccalc = self.matlab_pv['pix'][0].value
+                        self.dccalc = self.matlab_pv['pix'][0].value*pixscale
                         # self.matlab_pv['dcsignal'][0].put(value = self.matlab_pv['pix'][0].value, timeout = 1.0)
         if self.usepcav:
             if self.pcavbuffer.__len__() >= 600:
