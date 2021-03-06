@@ -111,7 +111,7 @@ class time_tool():
         self.pcavcalc=0
         self.limits = dict() # will hold limits from matlab pvs
         self.old_values = dict() # will hold the old values read from matlab
-        self.nm = ['watchdog', 'pix', 'fs', 'amp', 'amp_second', 'ref', 'FWHM', 'Stage', 'ipm','dcsignal','pcavcomp'] #list of internal names
+        self.nm = ['watchdog', 'pix', 'fs', 'amp', 'amp_second', 'ref', 'FWHM', 'Stage', 'ipm','dcsignal','pcavcomp','pcavoffset','useTT','usePCAV'] #list of internal names
         for nn in range(0,self.nm.__len__()): # loop over pvs to create'
             base = matlab_prefix + str(nn+matlab_start) # base pv name
             self.matlab_pv[self.nm[nn]] = [Pv(base), Pv(base+'.LOW'), Pv(base+'.HIGH'), Pv(base+'.DESC')]  # pv with normal, low and high
@@ -125,14 +125,17 @@ class time_tool():
             self.pcava.get(ctrl=True, timeout=1.0)
             self.pcavb.get(ctrl=True, timeout=1.0)
             #pdb.set_trace()
-            self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0
+            #self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0
+            self.matlab_pv['pcavoffset'][0].put(value=(self.pcava.value+self.pcavb.value)/2.0, timeout=1.0)
             self.old_values['pcavcomp'] = 0
             self.matlab_pv['pcavcomp'][0].put(value=0, timeout=1.0)
             #pdb.set_trace()
             self.pcavscale = 0.001
         
     def read_write(self):
-        if self.usett:
+        self.usett = self.self.matlab_pv['useTT'][0].get(ctrl=True, timeout=1.0)
+        self.usepcav = self.self.matlab_pv['usePCAV'][0].get(ctrl=True, timeout=1.0)
+        if self.usett == 1:
             self.ttpv.get(ctrl=True, timeout=1.0) # get TT array data
             self.stagepv.get(ctrl=True, timeout=1.0) # get TT stage position
             self.ipmpv.get(ctrl=True, timeout=1.0) # get intensity profile
@@ -144,21 +147,22 @@ class time_tool():
                     self.matlab_pv[self.nm[n]][x].get(ctrl=True, timeout=1.0)  # get all the matlab pvs
             self.matlab_pv[self.nm[7]][0].put(value = self.stagepv.value, timeout = 1.0)  # read stage position
             self.matlab_pv[self.nm[8]][0].put(value = self.ipmpv.value, timeout = 1.0) # read/write intensity profile
-        if self.usepcav:
+        if self.usepcav == 1:
             self.pcava.get(ctrl=True, timeout=1.0)
             self.pcavb.get(ctrl=True, timeout=1.0)
+            self.matlab_pv['pcavoffset'][0].get(ctrl=True, timeout=1.0)
             self.matlab_pv['pcavcomp'][0].get(ctrl=True, timeout=1.0)
             self.old_values['pcavcomp'] = self.matlab_pv['pcavcomp'][0].value # old PV values
-        if self.usett:
+        if self.usett == 1:
             if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value):
                 if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ):
                     if ( self.matlab_pv['pix'][0].value <> self.old_values['pix'] ) and ( self.matlab_pv['Stage'][0].value == self.old_values['Stage'] ):
                         self.dccalc = self.matlab_pv['pix'][0].value
                         # self.matlab_pv['dcsignal'][0].put(value = self.matlab_pv['pix'][0].value, timeout = 1.0)
-        if self.usepcav:
+        if self.usepcav == 1:
             if self.pcavbuffer.__len__() >= 600:
                 self.pcavbuffer.popleft()
-            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0-self.pcavinitial)
+            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0-self.matlab_pv['pcavoffset'][0].value)
             # self.pcavcalc = mean(self.pcavbuffer)-self.old_values['pcavcomp']
             self.pcavcalc = mean(self.pcavbuffer)*self.pcavscale
             self.matlab_pv['pcavcomp'][0].put(value = mean(self.pcavbuffer), timeout=1.0)
