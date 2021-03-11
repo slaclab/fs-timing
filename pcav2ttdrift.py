@@ -1,8 +1,8 @@
 #pcav2ttdrift.py
 """ Alt. version of drift compensation for laser lockers based on PCAVs.
 
-This script adapts the structure of time_tool.py, replacing the time-tool logic
-with a box-car average of the pcav data to drive a feed-forward loop on the
+This script adapts the structure of time_tool.py, adding to the time-tool logic
+a box-car average of the pcav data to drive a feed-forward loop on the
 lockers. This uses the same matlab pv that is defined in femto.py and
 time_tool.py for drift compensation. It is possible that the desired drift
 compensation approach should include both time tool data and pcav data, the
@@ -11,6 +11,8 @@ scale drifts that quickly move the laser outside of the time-tool window. In the
 event both drift compensation values are needed, then both input hooks should be
 set to True, and the drift average will be added to the time tool values that
 pass the original time-tool tests.
+
+This version of the code has been developed to work with new release on the laser feedback summary panel that is used on the photon side.
 
 This is a Python 2 function.
 """
@@ -25,7 +27,7 @@ import argparse # adding for utility and parsing the toggle states for which sys
 from collections import deque
 
 class time_tool():
-    def __init__ (self, sys='NULL',usett=False,usepcav=False,debug=False): 
+    def __init__ (self, sys='NULL',debug=False): 
         """ These definitions do not change from the original."""
         if sys == 'XPP':  # set up xpp system ; JM(2/21) - technically deprecated
             print('starting XPP pcav2ttdrift')
@@ -82,13 +84,7 @@ class time_tool():
             print(sys + '  not found, exiting')
             exit()
         
-        self.usett = usett
-        self.usepcav = usepcav
         self.debug = debug
-        if usett:
-            print("Using time tool drift compensation")
-        if usepcav:
-            print("Using phase cavity drift compensation")
         if debug:
             print("..running in debug mode")
         if pcavset == "HXR":
@@ -110,13 +106,28 @@ class time_tool():
         self.values = dict() # will hold the numbers from the time tool
         self.pcavdata = dict() # will hold values from the phase cavities
         self.pcavbuffer = deque()
-        # for n in range(0,60):
-        #     self.pcavbuffer.append(0.0)
         self.dccalc = 0
         self.pcavcalc=0
         self.limits = dict() # will hold limits from matlab pvs
         self.old_values = dict() # will hold the old values read from matlab
-        self.nm = ['watchdog', 'pix', 'fs', 'amp', 'amp_second', 'ref', 'FWHM', 'Stage', 'ipm','dcsignal','pcavcomp'] #list of internal names
+        # LIST OF INTERNAL PVS
+        # 'watchdog' (20) - watchdog counter tracking operation of code; writing a 0 will stop code (restart in an auto-restart env)
+        # 'pix' (21) - pixel (ie. time) value coming from ATM analysis
+        # 'fs' (22) - probably the pixels converted to fs? (JM)
+        # 'amp' (23) - JM: ATM amp? should then map to the TTAMP?
+        # 'amp_second' (24) - JM: unsure
+        # 'ref' (25) - JM: unused
+        # 'FWHM' (26) - JM: unused
+        # 'Stage' (27) - used to tell if the stage is moving
+        # 'ipm' (28)
+        # 'dcsignal' (29) - outbound correction signal
+        # 'pcavcomp' (30) - JM: the internal pcav correction component
+        # 'usett' (31) - enable/disable for using timetool
+        # 'usepc' (32) - enable/disable for using phase cavities
+        # 'reqZeroPcav' (33) - callback pv for zeroing the offsets from the phase cavities during operation
+        # 'pcavoffset' (34) - offset value for phase cavity correction
+        # 'pcavscale' (35) - scaling for the pcav correction
+        self.nm = ['watchdog', 'pix', 'fs', 'amp', 'amp_second', 'ref', 'FWHM', 'Stage', 'ipm','dcsignal','pcavcomp','usett','usepc','reqZeroPcav','pcavoffset','pcavscale']
         for nn in range(0,self.nm.__len__()): # loop over pvs to create'
             base = matlab_prefix + str(nn+matlab_start) # base pv name
             self.matlab_pv[self.nm[nn]] = [Pv(base), Pv(base+'.LOW'), Pv(base+'.HIGH'), Pv(base+'.DESC')]  # pv with normal, low and high
@@ -125,18 +136,30 @@ class time_tool():
             for x in range(0,3):
                 self.matlab_pv[self.nm[nn]][x].get(ctrl=True, timeout=1.0)
             self.matlab_pv[self.nm[nn]][3].put(value = self.nm[nn], timeout = 1.0)
+        self.usett = self.matlab_pv['usett'].get()
+        self.usepcav = self.matlab_pv['usepc'].get()
+        if usett:
+            print("Using time tool drift compensation")
+        if usepcav:
+            print("Using phase cavity drift compensation")
         self.W = watchdog.watchdog(self.matlab_pv[self.nm[0]][0]) # initialize watcdog
         if self.usepcav:
             self.pcava.get(ctrl=True, timeout=1.0)
             self.pcavb.get(ctrl=True, timeout=1.0)
-            #pdb.set_trace()
-            self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0
+            if self.matlab_pv['pcavoffset'].get().value == 0: # consider 0 to be uninitialized
+                self.matlab_pv['pcavoffset'].put(value=(self.pcava.value+self.pcavb.value)/2.0,timeout=2.0)
+                self.matlab_pv['pcavoffset'].get().value
+            self.pcavinitial = self.matlab_pv['pcavoffset'].value
             self.old_values['pcavcomp'] = 0
             self.matlab_pv['pcavcomp'][0].put(value=0, timeout=1.0)
-            #pdb.set_trace()
-            self.pcavscale = 0.001
+            if self.matlab_pv['pcavscale'].get().value == 0: # consider 0 to be uninitialized
+                self.matlab_pv['pcavscale'].put(value=-0.0008439,timeout=2.0)
+                self.matlab_pv['pcavscale'].get().value
+            self.pcavscale = self.matlab_pv['pcavscale'].value
         
     def read_write(self):
+        self.checkState()
+        self.pcavscale = self.matlab_pv['pcavscale'].get().value
         if self.usett:
             self.ttpv.get(ctrl=True, timeout=1.0) # get TT array data
             self.stagepv.get(ctrl=True, timeout=1.0) # get TT stage position
@@ -155,31 +178,39 @@ class time_tool():
             self.matlab_pv['pcavcomp'][0].get(ctrl=True, timeout=1.0)
             self.old_values['pcavcomp'] = self.matlab_pv['pcavcomp'][0].value # old PV values
         if self.usett:
-            if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value):
-                if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ):
-                    if ( self.matlab_pv['pix'][0].value <> self.old_values['pix'] ) and ( self.matlab_pv['Stage'][0].value == self.old_values['Stage'] ):
-                        self.dccalc = self.matlab_pv['pix'][0].value*pixscale
-                        # self.matlab_pv['dcsignal'][0].put(value = self.matlab_pv['pix'][0].value, timeout = 1.0)
+            if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value): # conditionals based on pv alarms
+                if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ): # ...
+                    if ( self.matlab_pv['pix'][0].value <> self.old_values['pix'] ) and ( self.matlab_pv['Stage'][0].value == self.old_values['Stage'] ): # is data new, is the stage not moving
+                        self.dccalc = self.matlab_pv['pix'][0].value*pixscale # prep tt component
+                        # ^ if !usett, but accumulate is on, the correction will stay where it last was, as opposed to zero'ing the tt component ("resetting the laser")
         if self.usepcav:
             if self.pcavbuffer.__len__() >= 600:
                 self.pcavbuffer.popleft()
-            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0-self.pcavinitial)
+            self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0)
             # self.pcavcalc = mean(self.pcavbuffer)-self.old_values['pcavcomp']
-            self.pcavcalc = mean(self.pcavbuffer)*self.pcavscale
+            self.pcavcalc = (mean(self.pcavbuffer)-self.pcavinitial)*self.pcavscale
             self.matlab_pv['pcavcomp'][0].put(value = mean(self.pcavbuffer), timeout=1.0)
         if self.debug:
             print('tt + pcav: %f'%self.dccalc+self.pcavcalc)
         else:
             self.matlab_pv['dcsignal'][0].put(value = self.dccalc+self.pcavcalc, timeout = 1.0)
 
-
+    def checkState(self):
+        """ Check whether state control pvs have been triggered. """
+        self.usett = self.matlab_pv['usett'].get().value
+        self.usepcav = self.matlab_pv['usepc'].get().value
+        if self.matlab_pv["reqZeroPcav"].get().value != 0:
+            # a pcav zero has been requested
+            self.matlab_pv["reqZeroPcav"].put(value=0,timeout = 1.0) # toggle the control back off
+            self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0 # until some indication it's needed, just writing the current value, not the processed history average
+            self.matlab_pv['pcavoffset'].put(value=self.pcavinitial,timeout=2.0)
 
 
 def run():  # just a loop to keep recording  
     if len(sys.argv) < 2:
         T = time_tool()  # initialize
     else:
-        T = time_tool(args.system,usett=args.timetool,usepcav=args.pcav,debug=args.debug)
+        T = time_tool(args.system,debug=args.debug)
     while T.W.error == 0:
         T.W.check() # check / update watchdog counter
         pause(T.delay)
@@ -188,7 +219,7 @@ def run():  # just a loop to keep recording
         except:
             del T
             print('crashed, restarting')
-            T = time_tool(args.system,usett=args.timetool,usepcav=args.pcav,debug=args.debug) # create again
+            T = time_tool(args.system,debug=args.debug) # create again
             if T.W.error:
                 return        
     pass  
@@ -197,8 +228,6 @@ if __name__ == "__main__":
     #parser
     parser = argparse.ArgumentParser(description = 'Alt. version of drift compensation for laser lockers based on PCAVs.')
     parser.add_argument('system', type=str, help="Identifier for the target hutch")
-    parser.add_argument("-T", "--timetool", action='store_true',help="enable time tool contribution to drift comp")
-    parser.add_argument("-P", "--pcav", action='store_true',help="enable pcav contribution to drift comp")
     parser.add_argument("-D", "--debug", action="store_true",help="Print desired moves, but do not execute")
     args = parser.parse_args()
     run()
