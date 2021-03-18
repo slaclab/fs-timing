@@ -31,7 +31,7 @@ class time_tool():
         """ These definitions do not change from the original."""
         if sys == 'XPP':  # set up xpp system ; JM(2/21) - technically deprecated
             print('starting XPP pcav2ttdrift')
-            self.delay = 0.1 # 1 second delay
+            self.delay = 0.1 
             pvname = 'XPP:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS3:VIT:matlab:'  # start of matlab names
@@ -41,7 +41,7 @@ class time_tool():
             pcavset = "HXR"
         elif sys == 'CXI':  # set up cxi system
             print('starting CXI pcav2ttdrift')
-            self.delay = 0.1 # 1 second delay
+            self.delay = 0.1 
             pvname = 'CXI:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS5:VIT:matlab:'  # start of matlab names
@@ -51,7 +51,7 @@ class time_tool():
             pcavset = "HXR"
         elif sys == 'XCS':  # set up xcs system
             print('starting XCS pcav2ttdrift')
-            self.delay = 0.1 # 1 second delay
+            self.delay = 0.1 
             pvname = 'XCS:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS4:VIT:matlab:'  # start of matlab names
@@ -61,7 +61,7 @@ class time_tool():
             pcavset = "HXR"
         elif sys == 'FS11':  # set up FS11 system
             print('starting FS11 pcav2ttdrift')
-            self.delay = 0.1 # 1 second delay
+            self.delay = 0.1 
             pvname = 'XPP:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS11:VIT:matlab:'  # start of matlab names
@@ -71,7 +71,7 @@ class time_tool():
             pcavset = "HXR"
         elif sys == 'FS14':  # set up FS14 system
             print('starting FS14 pcav2ttdrift')
-            self.delay = 0.1 # 1 second delay
+            self.delay = 0.1 
             pvname = 'TMO:TIMETOOL:TTALL'  # time tool array name
             matlab_start = 20 # first matlab pv
             matlab_prefix = 'LAS:FS14:VIT:matlab:'  # start of matlab names
@@ -79,7 +79,16 @@ class time_tool():
             ipmname = 'EM2K0:XGMD:HPS:milliJoulesPerPulse' # intensity profile monitor PV
             pixscale = 2.0e-6
             pcavset = "SXR"
-
+        elif sys == 'dev':
+            print('starting pcav2ttdrift for testing with development proto ioc')
+            self.delay = 0.1 
+            pvname = 'DEV:TIMETOOL:TTALL'  # time tool array name
+            matlab_start = 20 # first matlab pv
+            matlab_prefix = 'DEV:VIT:matlab:'  # start of matlab names
+            stagename = 'DEV:DELAYSTAGE'  # delay stage for time tool
+            ipmname = 'DEV:PULSEENERGY' # intensity profile monitor PV
+            pixscale = 2.0e-6
+            pcavset = "SXR"
         else:
             print(sys + '  not found, exiting')
             exit()
