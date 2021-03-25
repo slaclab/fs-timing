@@ -25,6 +25,7 @@ import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
 import argparse # adding for utility and parsing the toggle states for which system to use
 from collections import deque
+import pdb
 
 class time_tool():
     def __init__ (self, sys='NULL',debug=False): 
@@ -145,30 +146,30 @@ class time_tool():
             for x in range(0,3):
                 self.matlab_pv[self.nm[nn]][x].get(ctrl=True, timeout=1.0)
             self.matlab_pv[self.nm[nn]][3].put(value = self.nm[nn], timeout = 1.0)
-        self.usett = self.matlab_pv['usett'].get()
-        self.usepcav = self.matlab_pv['usepc'].get()
-        if usett:
+        self.usett = self.matlab_pv['usett'][0].get()
+        self.usepcav = self.matlab_pv['usepc'][0].get()
+        if self.usett:
             print("Using time tool drift compensation")
-        if usepcav:
+        if self.usepcav:
             print("Using phase cavity drift compensation")
         self.W = watchdog.watchdog(self.matlab_pv[self.nm[0]][0]) # initialize watcdog
-        if self.usepcav:
-            self.pcava.get(ctrl=True, timeout=1.0)
-            self.pcavb.get(ctrl=True, timeout=1.0)
-            if self.matlab_pv['pcavoffset'].get().value == 0: # consider 0 to be uninitialized
-                self.matlab_pv['pcavoffset'].put(value=(self.pcava.value+self.pcavb.value)/2.0,timeout=2.0)
-                self.matlab_pv['pcavoffset'].get().value
-            self.pcavinitial = self.matlab_pv['pcavoffset'].value
-            self.old_values['pcavcomp'] = 0
-            self.matlab_pv['pcavcomp'][0].put(value=0, timeout=1.0)
-            if self.matlab_pv['pcavscale'].get().value == 0: # consider 0 to be uninitialized
-                self.matlab_pv['pcavscale'].put(value=-0.0008439,timeout=2.0)
-                self.matlab_pv['pcavscale'].get().value
-            self.pcavscale = self.matlab_pv['pcavscale'].value
+        #if self.usepcav:
+        self.pcava.get(ctrl=True, timeout=1.0)
+        self.pcavb.get(ctrl=True, timeout=1.0)
+        if self.matlab_pv['pcavoffset'][0].get() == 0: # consider 0 to be uninitialized
+            self.matlab_pv['pcavoffset'][0].put(value=(self.pcava.value+self.pcavb.value)/2.0,timeout=2.0)
+            self.matlab_pv['pcavoffset'][0].get()
+        self.pcavinitial = self.matlab_pv['pcavoffset'][0].value
+        self.old_values['pcavcomp'] = 0
+        self.matlab_pv['pcavcomp'][0].put(value=0, timeout=1.0)
+        if self.matlab_pv['pcavscale'][0].get() == 0: # consider 0 to be uninitialized
+            self.matlab_pv['pcavscale'][0].put(value=-0.0008439,timeout=2.0)
+            self.matlab_pv['pcavscale'][0].get()
+        self.pcavscale = self.matlab_pv['pcavscale'][0].value
         
     def read_write(self):
         self.checkState()
-        self.pcavscale = self.matlab_pv['pcavscale'].get().value
+        self.pcavscale = self.matlab_pv['pcavscale'][0].get()
         if self.usett:
             self.ttpv.get(ctrl=True, timeout=1.0) # get TT array data
             self.stagepv.get(ctrl=True, timeout=1.0) # get TT stage position
@@ -206,13 +207,13 @@ class time_tool():
 
     def checkState(self):
         """ Check whether state control pvs have been triggered. """
-        self.usett = self.matlab_pv['usett'].get().value
-        self.usepcav = self.matlab_pv['usepc'].get().value
-        if self.matlab_pv["reqZeroPcav"].get().value != 0:
+        self.usett = self.matlab_pv['usett'][0].get()
+        self.usepcav = self.matlab_pv['usepc'][0].get()
+        if self.matlab_pv["reqZeroPcav"][0].get() != 0:
             # a pcav zero has been requested
-            self.matlab_pv["reqZeroPcav"].put(value=0,timeout = 1.0) # toggle the control back off
+            self.matlab_pv["reqZeroPcav"][0].put(value=0,timeout = 1.0) # toggle the control back off
             self.pcavinitial = (self.pcava.value+self.pcavb.value)/2.0 # until some indication it's needed, just writing the current value, not the processed history average
-            self.matlab_pv['pcavoffset'].put(value=self.pcavinitial,timeout=2.0)
+            self.matlab_pv['pcavoffset'][0].put(value=self.pcavinitial,timeout=2.0)
 
 
 def run():  # just a loop to keep recording  
