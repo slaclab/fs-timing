@@ -14,6 +14,8 @@ pass the original time-tool tests.
 
 This version of the code has been developed to work with new release on the laser feedback summary panel that is used on the photon side.
 
+This was tested on 3/22/2021.
+
 This is a Python 2 function.
 """
 import time
@@ -29,7 +31,12 @@ import pdb
 
 class time_tool():
     def __init__ (self, sys='NULL',debug=False): 
-        """ These definitions do not change from the original."""
+        """ These definitions do not change from the original. Each will have a
+            machine definition tag (used to instantiate a given system), and
+            process delay (to set the relative frame rate of the code), a
+            definition of which set of phase cavities to feedback on, the pvs
+            for the corresponding xray/optical cross-correlator and the main
+            notepad pvs used in processing the feedbacks."""
         if sys == 'XPP':  # set up xpp system ; JM(2/21) - technically deprecated
             print('starting XPP pcav2ttdrift')
             self.delay = 0.1 
@@ -95,6 +102,9 @@ class time_tool():
             exit()
         
         self.debug = debug
+        """ This code orinally had command-line hooks that set which modes it
+        used in feedback. These have been moved to control system inputs, what
+        remains is the capability to run without actually issuing commands."""
         if debug:
             print("..running in debug mode")
         if pcavset == "HXR":
@@ -108,16 +118,16 @@ class time_tool():
         self.stagepv.connect(timeout=1.0)
         self.ipmpv = Pv(ipmname)
         self.ipmpv.connect(timeout=1.0)
-        self.pcava=Pv(pcavpv[0])
+        self.pcava=Pv(pcavpv[0]) # first of whichever phase cavities are used
         self.pcava.connect(timeout=1.0)
-        self.pcavb=Pv(pcavpv[1])
+        self.pcavb=Pv(pcavpv[1]) # second phase cavity
         self.pcavb.connect(timeout=1.0)
         self.matlab_pv = dict()  # will hold list of pvs
         self.values = dict() # will hold the numbers from the time tool
         self.pcavdata = dict() # will hold values from the phase cavities
-        self.pcavbuffer = deque()
-        self.dccalc = 0
-        self.pcavcalc=0
+        self.pcavbuffer = deque() # the rolling buffer used to store the pcav values, to simply the process of averaging
+        self.dccalc = 0 # initialize the timetool correction, but will be replaced with actual values
+        self.pcavcalc=0 # initialize the phase cavity correction, but will be replaced with actual values
         self.limits = dict() # will hold limits from matlab pvs
         self.old_values = dict() # will hold the old values read from matlab
         # LIST OF INTERNAL PVS
@@ -153,7 +163,10 @@ class time_tool():
         if self.usepcav:
             print("Using phase cavity drift compensation")
         self.W = watchdog.watchdog(self.matlab_pv[self.nm[0]][0]) # initialize watcdog
-        #if self.usepcav:
+        """ if self.usepcav: bug fix, moved this outside; means that the system
+        will always connect to the pcavs, no matter the state. However, if
+        running this code, by definition, you're dealing with an experiment
+        laser, so the edge case is unimportant to optimize for. """
         self.pcava.get(ctrl=True, timeout=1.0)
         self.pcavb.get(ctrl=True, timeout=1.0)
         if self.matlab_pv['pcavoffset'][0].get() == 0: # consider 0 to be uninitialized
@@ -168,8 +181,10 @@ class time_tool():
         self.pcavscale = self.matlab_pv['pcavscale'][0].value
         
     def read_write(self):
+        """ main feedback loop proc"""
         self.checkState()
         self.pcavscale = self.matlab_pv['pcavscale'][0].get()
+        # first update the time tool and pcav values; this is synchronous, so making a poor attempt at lockstepping the two by separating reads and updates
         if self.usett:
             self.ttpv.get(ctrl=True, timeout=1.0) # get TT array data
             self.stagepv.get(ctrl=True, timeout=1.0) # get TT stage position
@@ -187,15 +202,21 @@ class time_tool():
             self.pcavb.get(ctrl=True, timeout=1.0)
             self.matlab_pv['pcavcomp'][0].get(ctrl=True, timeout=1.0)
             self.old_values['pcavcomp'] = self.matlab_pv['pcavcomp'][0].value # old PV values
+        # now process the time tool logic to determine whether to include a correction
         if self.usett:
             if (self.ipmpv.value > self.matlab_pv['ipm'][1].value) and (self.ipmpv.value < self.matlab_pv['ipm'][2].value): # conditionals based on pv alarms
                 if ( self.matlab_pv['amp'][0].value > self.matlab_pv['amp'][1].value ) and ( self.matlab_pv['amp'][0].value < self.matlab_pv['amp'][2].value ): # ...
                     if ( self.matlab_pv['pix'][0].value <> self.old_values['pix'] ) and ( self.matlab_pv['Stage'][0].value == self.old_values['Stage'] ): # is data new, is the stage not moving
                         self.dccalc = self.matlab_pv['pix'][0].value*pixscale # prep tt component
                         # ^ if !usett, but accumulate is on, the correction will stay where it last was, as opposed to zero'ing the tt component ("resetting the laser")
+        """ .. and then the same for the pcavs; if you want to change the
+        feedback to something more complex, this is the place to put it, either
+        by doing more complex math, or changing the buffer length to adjust how
+        much averaging the system does"""
         if self.usepcav:
+            # at a buffer length of 600, this is a rolling average of around 1 minute of data (depending on self.delay and the relative response times from PVs)
             if self.pcavbuffer.__len__() >= 600:
-                self.pcavbuffer.popleft()
+                self.pcavbuffer.popleft() # this could technically just have been left to the deque if max length was defined
             self.pcavbuffer.append((self.pcava.value+self.pcavb.value)/2.0)
             # self.pcavcalc = mean(self.pcavbuffer)-self.old_values['pcavcomp']
             self.pcavcalc = (mean(self.pcavbuffer)-self.pcavinitial)*self.pcavscale
@@ -203,10 +224,13 @@ class time_tool():
         if self.debug:
             print('tt + pcav: %f'%self.dccalc+self.pcavcalc)
         else:
+            # hand off the correction to femto.py via the dcsignal pv
             self.matlab_pv['dcsignal'][0].put(value = self.dccalc+self.pcavcalc, timeout = 1.0)
 
     def checkState(self):
-        """ Check whether state control pvs have been triggered. """
+        """ Check whether state control pvs have been triggered. JM(3/25): ends
+        up this could just be handled by a push-button state in EDM (that's how
+        Christina wrote it) but this works for pydm."""
         self.usett = self.matlab_pv['usett'][0].get()
         self.usepcav = self.matlab_pv['usepc'][0].get()
         if self.matlab_pv["reqZeroPcav"][0].get() != 0:
