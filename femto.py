@@ -1,6 +1,8 @@
 
 #femto.py  program to control laser femtosecond timing
 #updated 3/12/17 14?30
+# major version rework through 2021-07-21 - JM 
+# -- see version control history and Readme for major changes
 
 
 import time
@@ -11,12 +13,15 @@ from psp.Pv import Pv
 import sys
 import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
+from femtoconfig import Config
 
 class PVS():   # creates pvs
     def __init__(self, nx='NULL'):
-        self.version = 'Watchdog 141126a' # version string
+        self.config = Config()
+        # self.version = 'Watchdog 141126a' # version string
+        self.version = self.config["version"]
         self.name = nx
-        print self.name
+        print(self.name)
         namelist = set()
         self.pvlist = dict()  # will hold pvs with names
         matlab_list = dict() # list of matlab style pvs, tuples of matlab number offset and pv description
@@ -360,9 +365,9 @@ class PVS():   # creates pvs
        
         
         while not (self.name in namelist):
-            print self.name + '  not found, please enter one of the following '
+            print(self.name + ' not found, please enter one of the following ')
             for x in namelist:
-                print x
+                print(x)
             self.name = raw_input('enter system name:')                           
 
         matlab_use = matlab[self.name]
@@ -498,7 +503,7 @@ class PVS():   # creates pvs
                 v.get(ctrl=True, timeout=1.0) # get data
             except: # for now just fake it
                 print('could not open '+v.name)
-                print k
+                print(k)
                 self.OK = 0 # some error with setting up PVs, can't run, will exit  
         self.error_pv = Pv(error_pv_name[self.name]) # open pv
         self.error_pv.connect(timeout)
@@ -508,19 +513,15 @@ class PVS():   # creates pvs
         self.E = error_output(self.error_pv)
         self.E.write_error('OK')
        
-        
-        
-        
     def get(self, name):
         try:
             self.pvlist[name].get(ctrl=True, timeout=10.0)
             return self.pvlist[name].value                      
         except:
-            print 'PV READ ERROR'
-            print name
+            print('PV READ ERROR')
+            print(name)
             return 0
-                
-                
+                         
     def get_last(self, name): # gets last value read, no pv read / write
         return self.pvlist[name].value                
                 
@@ -528,15 +529,15 @@ class PVS():   # creates pvs
         try:
             self.pvlist[name].put(x, timeout = 10.0) # long timeout           
         except:
-            print 'UNABLE TO WRITE PV'
-            print name
-            print x
+            print('UNABLE TO WRITE PV')
+            print(name)
+            print(x)
                 
     def __del__ (self):
         for v in self.pvlist.itervalues():
             v.disconnect()  
         self.error_pv.disconnect()    
-        print 'closed all PV connections'
+        print('closed all PV connections')
 
 class locker():  # sets up parameters of a particular locking system
     def __init__(self, P, W):  # Uses PV list
@@ -614,38 +615,47 @@ class locker():  # sets up parameters of a particular locking system
         M.move(0)  # move to zero to start 
         M.wait_for_stop()
         for x in tctrl:  #loop over input array 
-            print 'calib start'
+            print('calib start')
+
             self.W.check() # check watchdog
-            print 'post watchdog'
+            print('post watchdog')
+
             if self.W.error:
                 return    
             if not self.P.get('calibrate'):
                 return   # canceled calibration
-            print 'move motor'
+            print('move motor')
+
             M.move(x)  # move motor
-            print 'wait for stop'
+            print('wait for stop')
+
             M.wait_for_stop()
-            print 'sleep'
+            print('sleep')
+
             time.sleep(2)  #Don't know why this is needed
             t_tmp = 0 # to check if we ever get a good reading
-            print 'get read'
+            print('get read')
+
             for n in range (0, 25): # try to see if we can get a good reading
                  t_tmp = self.C.get_time()  # read time
                  if t_tmp != 0: # have a new reading
                      break # break out of loop
             tout = append(tout, t_tmp) # read timing and put in array
-            print 'end of loop'
-            print t_tmp
-            print self.C.good
+            print('end of loop')
+
+            print(t_tmp')
+            print(self.C.good')
             counter_good = append(counter_good, self.C.good) # will use to filter data
             if not self.C.good:
-                print 'bad counter data'
+                print('bad counter data')
+
                 self.P.E.write_error('timer error, bad data - continuing to calibrate' ) # just for testing
         M.move(tctrl[0])  # return to original position    
         minv = min(tout[nonzero(counter_good)])+ self.delay_offset
 
-        print 'min v is'        
-        print minv
+        print('min v is')
+        
+        print(minv)
         period = 1/self.laser_f # just defining things needed in sawtooth -  UGLY
         delay = minv - t_trig # more code cleanup neded in teh future.
         err = array([]) # will hold array of errors
@@ -654,17 +664,19 @@ class locker():  # sets up parameters of a particular locking system
             S = sawtooth(tctrl, t_trig, delay, x, period) # sawtooth sim
             err = append(err, sum(counter_good*S.r * (S.t - tout)**2))  # total error
         idx = argmin(err) # index of minimum of error
-        print 'offset, delay  trig_time'
-        print offset[idx]
-        print delay
-        print t_trig
+        print('offset, delay  trig_time')
+
+        print(offset[idx])
+        print(delay)
+        print(t_trig)
         S = sawtooth(tctrl, t_trig, delay, offset[idx], period)
         self.P.put('calib_error', sqrt(err[idx]/ self.calib_points))
         self.d['delay'] = delay
         self.d['offset'] = offset[idx]
         self.P.put('delay', delay)
         self.P.put('offset', offset[idx])
-        #print 'PLOTTING CALIBRATION'
+        #print('PLOTTING CALIBRATION')
+
         #plot(tctrl, tout, 'bx', tctrl, S.r * S.t, 'r-') # plot to compare
         #plot(tctrl, tout, 'bx', tctrl, S.t, 'r-') # plot to compare
         #plot(tctrl, S.r *(tout - S.t), 'gx')
@@ -673,7 +685,8 @@ class locker():  # sets up parameters of a particular locking system
         self.P.put('busy', 0)        
         
     def second_calibrate(self):
-        print 'starting second calibration - new test'
+        print('starting second calibration - new test')
+
         M = phase_motor(self.P)  # create phase motor object
         ptime = 30 # seconds between cycles
         tneg = 0.5 # nanoseconds range below current  -2 ok
@@ -689,11 +702,12 @@ class locker():  # sets up parameters of a particular locking system
             time.sleep(ptime)# long wait for now
             tr = 1e9 * self.P.get('secondary_calibration')
             tread = append(tread, tr)
-            print n
-            print t
-            print tr
+            print(n)
+            print(t)
+            print(tr)
         M.move(t0) # put motor back    
-        print 'done motor move'
+        print('done motor move')
+
         
         
         
@@ -701,11 +715,13 @@ class locker():  # sets up parameters of a particular locking system
         ca = 0.01;
         param0 = sa,ca
         tdiff = tread - tset - (mean(tread-tset))
-        print 'start leastsq'
+        print('start leastsq')
+
         fout = leastsq(fitres, param0, args=(tset, tdiff))    
-        print 'end leastsq, param ='
+        print('end leastsq, param =')
+
         param = fout[0];
-        print param
+        print(param)
         sa,ca = param
         ttest = array([])
         for nx in range(0,200):
@@ -713,10 +729,12 @@ class locker():  # sets up parameters of a particular locking system
         #fitout = ffun(ttest, sa, ca)
         self.P.put('secondary_calibration_s', sa)
         self.P.put('secondary_calibration_c', ca)
-        #print 'PLOTTING SECONDARY CALIBRATION'
+        #print('PLOTTING SECONDARY CALIBRATION')
+
         #plot(tset, tdiff, 'bx', ttest, fitout, 'r-') # plot to compare
         #show()
-        #print 'Done plotting'
+        #print('Done plotting')
+
         
         
         
@@ -811,7 +829,8 @@ class locker():  # sets up parameters of a particular locking system
             self.d['delay'] = self.P.get('delay')
             self.d['offset'] = self.P.get('offset')
         except:
-            print 'problem reading delay and offset pvs'
+            print('problem reading delay and offset pvs')
+
         S = sawtooth(pc, t_trig, self.d['delay'], self.d['offset'], 1/self.laser_f) # calculate time        
         self.terror = t - S.t # error in ns
         self.buckets = round(self.terror * self.locking_f)
@@ -825,10 +844,12 @@ class locker():  # sets up parameters of a particular locking system
             self.buckets = 0
             self.P.E.write_error( 'not an integer number of buckets')
         if self.buckets != 0:
-            print 'bucket jump - buckets, error'
-            print 'buckets'
-            print self.buckets
-            print self.bucket_error
+            print('bucket jump - buckets, error')
+
+            print('buckets')
+
+            print(self.buckets)
+            print(self.bucket_error)
         self.P.E.write_error( 'Laser OK')      # laser is OK
             
     def fix_jump(self):  # tries to fix the jumps 
@@ -855,7 +876,8 @@ class locker():  # sets up parameters of a particular locking system
         self.P.E.write_error( 'Done Fixing Jump')
         bc = self.P.get('bucket_counter') # previous number of jumps
         self.P.put('bucket_counter', bc + 1)  # write incremented number
-        print 'jump fix done'
+        print('jump fix done')
+
        
             
 # t0 is an array of inputs that represent the phase shift time
@@ -951,7 +973,8 @@ class phase_motor():
             try:
                 stopped = self.P.get('phase_motor_dmov') # 1 if stopped, if throws error, is still moving
             except:
-                print 'could not get dmov'
+                print('could not get dmov')
+
                 stopped = 0  # threw error, assume not stopped (should clean up to look for epics error)
             if stopped:
                 posrb = self.P.get('phase_motor_rb') * self.scale  # position in nanoseconds
@@ -1048,11 +1071,17 @@ def ffun( x, a, b):
     return out        
 
 
+class femtoConfig(object):
+    """ New configuration object for handling configuration files instead of hardcoding configs."""
+    def __init__(self,config_fpath):
+        super().__init__()
+        
 
 
-
-
-def femto(name='NULL'):
+def femto(config_fpath='NULL'):
+    """ The parent logical object for an instance of femto.py; initializes
+    objects and manages the run loop."""
+    config = femtoConfig()
     P = PVS(name)
     if P.OK == 0:
         return
@@ -1115,9 +1144,10 @@ def femto(name='NULL'):
             D.run()  # deals with degreees S band conversion    
             #P.E.write_error('Laser OK')
         except:   # catch any otehrwise uncaught error.
-            print sys.exc_info()[0] # print error I hope
+            print(sys.exc_info()[0] # print error I hope)
             del P  #does this work?
-            print 'UNKNOWN ERROR, trying again'   
+            print('UNKNOWN ERROR, trying again')
+   
             P = PVS(name)
             W = watchdog.watchdog(P.pvlist['watchdog'])
             L = locker(P, W) #set up locking system parameters
@@ -1131,6 +1161,6 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         femto()  # null input will prompt
     else:
-        femto(sys.argv[1])
+        femto(sys.argv[1]) # major change to provide config file as command line input
     
 
