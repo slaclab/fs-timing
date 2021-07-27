@@ -4,7 +4,8 @@ import math
 import plotly
 import numpy
 # import watchdog
-from psp.Pv import Pv
+#from psp.Pv import Pv
+from epics import PV as Pv # switching in this lib, doesn't necessarily match online version
 import sys
 import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
@@ -366,7 +367,7 @@ class PVS():   # creates pvs
             print(self.name + ' not found, please enter one of the following ')
             for x in namelist:
                 print(x)
-            self.name = raw_input('enter system name:')                           
+            # self.name = raw_input('enter system name:')                           
 
         matlab_use = matlab[self.name]
         self.use_secondary_calibration = use_secondary_calibration[self.name]
@@ -468,18 +469,20 @@ class PVS():   # creates pvs
         if self.use_dither:
             self.pvlist['dither_level'] = Pv(dither_level[self.name])
         # ASTA ATCA system replaces certain PVs
-        if self.is_atca:
-            self.pvlist['lock_enable'] = Pv(atca_base[self.name]+'RF_LOCK_ENABLE')
-            self.pvlist['laser_locked'] = Pv(atca_base[self.name]+'PHASE_LOCKED')
-            self.pvlist['rf_pwr']= Pv(atca_base[self.name]+'RF_PWR') # RF power readback
-            self.pvlist['rf_pwr_lolo']= Pv(atca_base[self.name]+'RF_PWR'+'.LOLO') # RF power readback
-            self.pvlist['rf_pwr_hihi']= Pv(atca_base[self.name]+'RF_PWR'+'.HIHI') # RF power readback 
-            self.pvlist['diode_pwr'] = Pv(atca_base[self.name]+'DIODE_PWR')
-            self.pvlist['diode_pwr_lolo'] = Pv(atca_base[self.name]+'DIODE_PWR'+'.LOLO')
-            self.pvlist['diode_pwr_hihi'] = Pv(atca_base[self.name]+'DIODE_PWR'+'.HIHI')
-        else:
+        try:
+            if self.is_atca:
+                self.pvlist['lock_enable'] = Pv(atca_base[self.name]+'RF_LOCK_ENABLE')
+                self.pvlist['laser_locked'] = Pv(atca_base[self.name]+'PHASE_LOCKED')
+                self.pvlist['rf_pwr']= Pv(atca_base[self.name]+'RF_PWR') # RF power readback
+                self.pvlist['rf_pwr_lolo']= Pv(atca_base[self.name]+'RF_PWR'+'.LOLO') # RF power readback
+                self.pvlist['rf_pwr_hihi']= Pv(atca_base[self.name]+'RF_PWR'+'.HIHI') # RF power readback 
+                self.pvlist['diode_pwr'] = Pv(atca_base[self.name]+'DIODE_PWR')
+                self.pvlist['diode_pwr_lolo'] = Pv(atca_base[self.name]+'DIODE_PWR'+'.LOLO')
+                self.pvlist['diode_pwr_hihi'] = Pv(atca_base[self.name]+'DIODE_PWR'+'.HIHI')
+            else:
+                self.pvlist['phase_motor_dmov'] = Pv(phase_motor[self.name]+'.DMOV')  # motor motion status
+        except AttributeError: 
             self.pvlist['phase_motor_dmov'] = Pv(phase_motor[self.name]+'.DMOV')  # motor motion status
-
             
        # set up all the matlab PVs
         # for k, v in matlab_list.iteritems():  # loop over items

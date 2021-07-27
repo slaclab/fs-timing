@@ -2,7 +2,7 @@ import os
 import pathlib
 import json
 import re
-# from psp.Pv import Pv
+from epics import PV as Pv
 
 class Config(object):
     """The base config class encapsulates the logic for reading and validating
@@ -12,6 +12,7 @@ class Config(object):
         self.config = {}
         self.version = ""
         self.name = ""
+        self.pvlist = {}
         pass
 
     def readConfig(self,filename):
@@ -80,14 +81,33 @@ class Config(object):
         defined but not enabled in the configuration. As such, this function
         includes program logic as part of its function."""
         pvvals = []
-        pvvals.append({"freq_counter":self.config["config"]["freq_counter"]})
-        pvvals.append({"phase_motor":self.config["config"]["phase_motor"]})
-        pvvals.append({"error_pv_name":self.config["config"]["error_pv_name"]})
-        pvvals.append({"version_pv_name":self.config["config"]["version_pv_name"]})
-        pvvals.append({"laser_trigger":self.config["config"]["laser_trigger"]})
+        pvvals.append(("freq_counter",self.config["config"]["freq_counter"]))
+        pvvals.append(("phase_motor",self.config["config"]["phase_motor"]))
+        pvvals.append(("error_pv_name",self.config["config"]["error_pv_name"]))
+        pvvals.append(("version_pv_name",self.config["config"]["version_pv_name"]))
+        pvvals.append(("laser_trigger",self.config["config"]["laser_trigger"]))
+        pvvals.append(("watchdog",self.config["config"]["dev_base"]+"FS_WATCHDOG"))
+        pvvals.append(("oscillator_f",self.config["config"]["dev_base"]+"FS_OSC_TGT_FREQ"))
+        pvvals.append(("time",self.config["config"]["dev_base"]+"FS_TGT_TIME"))
+        pvvals.append(("time_hihi",self.config["config"]["dev_base"]+"FS_TGT_TIME_HIHI"))
+        pvvals.append(("time_lolo",self.config["config"]["dev_base"]+"FS_TGT_TIME.LOLO"))
+        pvvals.append(("calibrate",self.config["config"]["dev_base"]+"FS_START_CALIB"))
+        pvvals.append(("enable",self.config["config"]["dev_base"]+"FS_ENABLE_TIME_CTRL"))
+        pvvals.append(("busy",self.config["config"]["dev_base"]+"FS_CTRL_BUSY"))
 
         if self.config["config"]["use_drift_correction"]:
-            pvvals.append({})
+            pvvals.append(())
+
+        self.name = self.config["config"]["name"]
+        self.use_secondary_calibration = self.config["config"]["use_secondary_calibration"]
+        if self.config["config"]["type"] == "ATCA":
+            self.is_atca = 1
+        self.error_pv_name = self.config["config"]["dev_base"]+"FS_STATUS"
+
+        # self.pvlist = pvvals
+        for entry in pvvals:
+            self.pvlist[entry[0]]=Pv(entry[1])
+        # print(self.pvlist)
 
     def expandV1defsInParent(self):
         """As part of incremental refactoring of femto.py, this function will

@@ -6,6 +6,7 @@
     },
     "config" : {
         "name" : "ASTA",
+        "type" : "ATCA",
         "genpv_base" : "OSC:AS01:1:",
         "dev_base" : "OSC:AS01:1:",
         "matlab_pv_base" : "OSC:AS01:1:matlab:",
