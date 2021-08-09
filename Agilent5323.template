@@ -230,6 +230,80 @@ record(ai, "$(DEVICE):GET_EX_FREQ") {
   info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
 }
 
+record(ai, "$(DEVICE):SET_LASER_TINT_CHANNELS") {
+  field(DESC, "@Agilent5323.proto SET_LASER_TINT_CHANNELS")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_TINT_CHANNELS")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INA_COUPLING ") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INA_COUPLING")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INA_COUPLING")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INB_COUPLING") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INB_COUPLING")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INB_COUPLING")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INA_IMPEDANCE") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INA_IMPEDANCE")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INA_IMPEDANCE")
+  field(EGU, "Ohms")
+  field(PREC, "4")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INB_IMPEDANCE") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INB_IMPEDANCE")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INB_IMPEDANCE")
+  field(EGU, "Ohms")
+  field(PREC, "4")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INA_LEVEL") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INA_LEVEL")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INA_LEVEL")
+  field(EGU, "V")
+  field(PREC, "4")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INB_LEVEL") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INB_LEVEL")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INB_LEVEL")
+  field(EGU, "V")
+  field(PREC, "4")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INA_SLOPE") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INA_SLOPE")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INA_SLOPE")
+  field(PREC, "4")
+}
+
+record(ai, "$(DEVICE):SET_LASER_INB_SLOPE") {
+  field(DESC, "@Agilent5323.proto SET_LASER_INB_SLOPE")
+  field(DTYP, "stream")
+  field(SCAN, "passive")
+  field(INP, "@Agilent5323.proto SET_LASER_INB_SLOPE")
+  field(PREC, "4")
+}
+
+
 #! Further lines contain data used by VisualDCT
 #! View(0,0,1.0)
 #! Record("$(DEVICE):IDENTITY",20,22,0,0,"$(DEVICE):IDENTITY")
