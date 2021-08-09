@@ -50,8 +50,20 @@ record(fanout, "$(DEVICE):UPDATE") {
 
 record(fanout, "$(DEVICE):SET_LASER_TINT") {
   field(DESC, "Set Device Operation to Time Interval Only")
-  field(LNK1, "$(DEVICE):SET_TINT_MODE_LASER")
-  
+  field(LNK1, "$(DEVICE):SET_LASER_TINT_CHANNELS")
+  field(LNK2, "$(DEVICE):SET_LASER_INA_COUPLING")
+  field(LNK3, "$(DEVICE):SET_LASER_INB_COUPLING")
+  field(LNK4, "$(DEVICE):SET_LASER_INA_IMPEDANCE")
+  field(LNK5, "$(DEVICE):SET_LASER_INB_IMPEDANCE")
+  field(LNK6, "$(DEVICE):SET_LASER_TINT_2")
+}
+
+record(fanout, "$(DEVICE):SET_LASER_TINT_2") {
+  field(DESC, "Additional pv setting")
+  field(LNK1, "$(DEVICE):SET_LASER_INA_LEVEL")
+  field(LNK2, "$(DEVICE):SET_LASER_INB_LEVEL")
+  field(LNK3, "$(DEVICE):SET_LASER_INA_SLOPE")
+  field(LNK4, "$(DEVICE):SET_LASER_INB_SLOPE)
 }
 
 record(ai, "$(DEVICE):FREQ_RBCK_RAW") {
@@ -197,6 +209,25 @@ record(bo, "$(DEVICE):SET_NOISE_REJ") {
   field(ONAM, "ON")
   field(FLNK, "$(DEVICE):GET_NOISE_REJ")
   info(autosaveFields, "VAL ZSV OSV")
+}
+
+record(ai, "$(DEVICE):GET_TINT_AB") {
+  field(DESC, "Time Interval A/B")
+  field(DTYP, "stream")
+  field(INP, "@Agilent53220A.proto GET_TINT_AB $(PORT)")
+  field(EGU, "seconds")
+  field(PREC, "8")
+  info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
+}
+
+record(ai, "$(DEVICE):GET_EX_FREQ") {
+  field(DESC, "Optional Input Frequency")
+  field(DTYP, "stream")
+  #field(SCAN, "$(SCAN)")
+  field(INP, "@Agilent53220A.proto GET_EX_FREQ $(PORT)")
+  field(EGU, "Hz")
+  field(PREC, "8")
+  info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
 }
 
 #! Further lines contain data used by VisualDCT

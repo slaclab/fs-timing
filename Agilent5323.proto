@@ -37,7 +37,8 @@ GET_IDN             { out "*IDN?";              in "%39c"; }
 RESET               { out "*RST";                          }
 
 # Measurement
-GET_FREQ            { out "READ?";              in "READ?\r\n%E";}
+#GET_FREQ            { out "READ?";              in "READ?\r\n%E";} 
+GET_FREQ            { out "CONF:FREQ;AUT;READ?";              in "CONF:FREQ;AUT;READ?\r\n%E";}
 GET_IMPEDANCE       { out "INP:IMP?";			in "INP:IMP?\r\n%{+1.00000000E+006|+5.00000000E+001}";}
 SET_IMPEDANCE       { out "INP:IMP %{1.0E6|50}";in "%*s"; @init{ GET_IMPEDANCE;}}
 GET_TRIG_LEVEL      { out "INP:LEV:ABS?";       in "INP:LEV:ABS?\r\n%E";}
@@ -96,7 +97,10 @@ SET_LASER_INA_COUPLING     { out "INPUT1:COUP AC"; in "%*s"; }
 SET_LASER_INB_COUPLING      { out "INPUT2:COUP AC"; in "%*s"; }
 SET_LASER_INA_IMPEDANCE     { out "INPUT1:IMP 1000"; in "%*s"; }
 SET_LASER_INB_IMPEDANCE     { out "INPUT2:IMP 1000"; in "%*s"; }
-SET_LASER_INA_LEVEL
-SET_LASER_INB_LEVEL
-SET_LASER_INA_SLOPE
-SET_LASER_INB_SLOPE
+SET_LASER_INA_LEVEL         { out "INPUT1:LEVEL 2.2"; in "%*s"; }
+SET_LASER_INB_LEVEL         { out "INPUT2:LEVEL 2.2"; in "%*s"; }
+SET_LASER_INA_SLOPE         { out "INPUT1:SLOPE POS"; in "%*s"; }
+SET_LASER_INB_SLOPE         { out "INPUT2:SLOPE NEG"; in "%*s"; }
+
+GET_TINT_AB	    { out "MEAS:TINT? (@1),(@2)";  in "MEAS:TINT? (@1),(@2)\r\n%E";}
+GET_EX_FREQ	    { out "MEAS:FREQ? (@3)";	   in "MEAS:FREQ? (@3)\r\n%E";}
