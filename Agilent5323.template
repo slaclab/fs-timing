@@ -50,25 +50,25 @@ record(fanout, "$(DEVICE):UPDATE") {
 
 record(fanout, "$(DEVICE):SET_LASER_TINT") {
   field(DESC, "Set Device Operation to Time Interval Only")
-  field(LNK1, "$(DEVICE):SET_LASER_TINT_CHANNELS")
-  field(LNK2, "$(DEVICE):SET_LASER_INA_COUPLING")
-  field(LNK3, "$(DEVICE):SET_LASER_INB_COUPLING")
-  field(LNK4, "$(DEVICE):SET_LASER_INA_IMPEDANCE")
-  field(LNK5, "$(DEVICE):SET_LASER_INB_IMPEDANCE")
-  field(LNK6, "$(DEVICE):SET_LASER_TINT_2")
+  field(LNK1, "$(DEVICE):SET_LASER_TINT_CHS.PROC")
+  field(LNK2, "$(DEVICE):SET_LASER_INA_COUPLING.PROC")
+  field(LNK3, "$(DEVICE):SET_LASER_INB_COUPLING.PROC")
+  field(LNK4, "$(DEVICE):SET_LASER_INA_IMPEDANCE.PROC")
+  field(LNK5, "$(DEVICE):SET_LASER_INB_IMPEDANCE.PROC")
+  field(LNK6, "$(DEVICE):SET_LASER_TINT_2.PROC")
 }
 
 record(fanout, "$(DEVICE):SET_LASER_TINT_2") {
   field(DESC, "Additional pv setting")
-  field(LNK1, "$(DEVICE):SET_LASER_INA_LEVEL")
-  field(LNK2, "$(DEVICE):SET_LASER_INB_LEVEL")
-  field(LNK3, "$(DEVICE):SET_LASER_INA_SLOPE")
-  field(LNK4, "$(DEVICE):SET_LASER_INB_SLOPE)
+  field(LNK1, "$(DEVICE):SET_LASER_INA_LEVEL.PROC")
+  field(LNK2, "$(DEVICE):SET_LASER_INB_LEVEL.PROC")
+  field(LNK3, "$(DEVICE):SET_LASER_INA_SLOPE.PROC")
+  field(LNK4, "$(DEVICE):SET_LASER_INB_SLOPE.PROC")
 }
 
 record(ai, "$(DEVICE):FREQ_RBCK_RAW") {
   field(DESC, "Measured frequency")
-  field(SCAN, "$(SCAN)")
+  #field(SCAN, "$(SCAN)")
   field(DTYP, "stream")
   field(INP, "@Agilent5323.proto GET_FREQ $(PORT)")
   field(EGU, "Hz")
@@ -220,6 +220,16 @@ record(ai, "$(DEVICE):GET_TINT_AB") {
   info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
 }
 
+record(ai, "$(DEVICE):LASER_TINT") {
+  field(DESC, "Measured time interval")
+  field(DTYP, "stream")
+  field(SCAN, "$(SCAN)")
+  field(INP, "@Agilent5323.proto LASER_TINT $(PORT)")
+  #field(EGU, "s")
+  #field(PREC, "8")
+  #info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
+}
+
 record(ai, "$(DEVICE):GET_EX_FREQ") {
   field(DESC, "Optional Input Frequency")
   field(DTYP, "stream")
@@ -230,76 +240,76 @@ record(ai, "$(DEVICE):GET_EX_FREQ") {
   info(autosaveFields, "DESC EGU HHSV HIGH HIHI HSV LLSV LOLO LOW LSV PREC")
 }
 
-record(ai, "$(DEVICE):SET_LASER_TINT_CHANNELS") {
+record(ao, "$(DEVICE):SET_LASER_TINT_CHS") {
   field(DESC, "@Agilent5323.proto SET_LASER_TINT_CHANNELS")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_TINT_CHANNELS")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_TINT_CHS $(PORT)")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INA_COUPLING ") {
+record(ao, "$(DEVICE):SET_LASER_INA_COUPLING ") {
   field(DESC, "@Agilent5323.proto SET_LASER_INA_COUPLING")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INA_COUPLING")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INA_COUPLING $(PORT)")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INB_COUPLING") {
+record(ao, "$(DEVICE):SET_LASER_INB_COUPLING") {
   field(DESC, "@Agilent5323.proto SET_LASER_INB_COUPLING")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INB_COUPLING")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INB_COUPLING $(PORT)")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INA_IMPEDANCE") {
+record(ao, "$(DEVICE):SET_LASER_INA_IMPEDANCE") {
   field(DESC, "@Agilent5323.proto SET_LASER_INA_IMPEDANCE")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INA_IMPEDANCE")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INA_IMPEDANCE $(PORT)")
   field(EGU, "Ohms")
   field(PREC, "4")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INB_IMPEDANCE") {
+record(ao, "$(DEVICE):SET_LASER_INB_IMPEDANCE") {
   field(DESC, "@Agilent5323.proto SET_LASER_INB_IMPEDANCE")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INB_IMPEDANCE")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INB_IMPEDANCE $(PORT)")
   field(EGU, "Ohms")
   field(PREC, "4")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INA_LEVEL") {
+record(ao, "$(DEVICE):SET_LASER_INA_LEVEL") {
   field(DESC, "@Agilent5323.proto SET_LASER_INA_LEVEL")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INA_LEVEL")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INA_LEVEL $(PORT)")
   field(EGU, "V")
   field(PREC, "4")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INB_LEVEL") {
+record(ao, "$(DEVICE):SET_LASER_INB_LEVEL") {
   field(DESC, "@Agilent5323.proto SET_LASER_INB_LEVEL")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INB_LEVEL")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INB_LEVEL $(PORT)")
   field(EGU, "V")
   field(PREC, "4")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INA_SLOPE") {
+record(ao, "$(DEVICE):SET_LASER_INA_SLOPE") {
   field(DESC, "@Agilent5323.proto SET_LASER_INA_SLOPE")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INA_SLOPE")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INA_SLOPE $(PORT)")
   field(PREC, "4")
 }
 
-record(ai, "$(DEVICE):SET_LASER_INB_SLOPE") {
+record(ao, "$(DEVICE):SET_LASER_INB_SLOPE") {
   field(DESC, "@Agilent5323.proto SET_LASER_INB_SLOPE")
   field(DTYP, "stream")
-  field(SCAN, "passive")
-  field(INP, "@Agilent5323.proto SET_LASER_INB_SLOPE")
+  field(SCAN, "Passive")
+  field(OUT, "@Agilent5323.proto SET_LASER_INB_SLOPE $(PORT)")
   field(PREC, "4")
 }
 

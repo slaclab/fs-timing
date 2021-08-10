@@ -26,7 +26,10 @@
 
 # Chaning InTerminator for 53230A
 InTerminator  = "\r\n53230A>";
+#InTerminator = "\r\n";
+#InTerminator = "\n";
 OutTerminator = CR LF;
+#OutTerminator = "\r\n";
 ReplyTimeout  =  5000;
 ReadTimeout   =  5000;
 WriteTimeout  =  10000;
@@ -37,8 +40,9 @@ GET_IDN             { out "*IDN?";              in "%39c"; }
 RESET               { out "*RST";                          }
 
 # Measurement
-#GET_FREQ            { out "READ?";              in "READ?\r\n%E";} 
-GET_FREQ            { out "CONF:FREQ;AUT;READ?";              in "CONF:FREQ;AUT;READ?\r\n%E";}
+GET_FREQ            { out "READ?";              in "READ?\r\n%E";}
+LASER_TINT	    { out "READ?";		in "READ?\r\n%E";} 
+#GET_FREQ            { out "CONF:FREQ;AUT;READ?";              in "CONF:FREQ;AUT;READ?\r\n%E";}
 GET_IMPEDANCE       { out "INP:IMP?";			in "INP:IMP?\r\n%{+1.00000000E+006|+5.00000000E+001}";}
 SET_IMPEDANCE       { out "INP:IMP %{1.0E6|50}";in "%*s"; @init{ GET_IMPEDANCE;}}
 GET_TRIG_LEVEL      { out "INP:LEV:ABS?";       in "INP:LEV:ABS?\r\n%E";}
@@ -92,7 +96,7 @@ GET_CALC_SMOOTHING_NUM  { out "CALC:SMO:RESP?";   in "CALC:SMO:RESP?\r\n%{SLOW|M
 SET_CALC_SMOOTHING_NUM  { out "CALC:SMO:RESP %{SLOW|MED|FAST}";   in "%*s"; @init{GET_CALC_SMOOTHING_NUM;}}
 
 # These are laser-specific configuration controls, current set up for test stand operation
-SET_LASER_TINT_CHANNELS     { out "CONF:TINT (@1),(@2)"; in "%*S"; @init{}}
+SET_LASER_TINT_CHS     { out "CONF:TINT (@1),(@2)"; in "%*s"; }
 SET_LASER_INA_COUPLING     { out "INPUT1:COUP AC"; in "%*s"; }
 SET_LASER_INB_COUPLING      { out "INPUT2:COUP AC"; in "%*s"; }
 SET_LASER_INA_IMPEDANCE     { out "INPUT1:IMP 1000"; in "%*s"; }
