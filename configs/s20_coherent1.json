@@ -1,0 +1,31 @@
+{
+    "config_meta" : {
+        "author" : "Justin May",
+        "author_date" : "2021-08-12",
+        "desc" : "Translated config for S20 Coherent 1"
+    },
+    "config" : {
+        "name" : "VITARA1",
+        "type" : "SIM",
+        "genpv_base" : "OSC:LR20:20:",
+        "dev_base" : "OSC:LR20:20:",
+        "matlab_pv_base" : "SIOC:SYS0:ML01:AO",
+        "matlab_pv_offsets" : 480,
+        "matlab_pv_digits" : 3,
+        "counter_base" : "OSC:LR20:20:",
+        "freq_counter" : "OSC:LR20:20:FREQ_CUR",
+        "phase_motor" : "OSC:LR20:20:M1_MOTR_IQ",
+        "error_pv_name" : "OSC:LR20:20:FS_STATUS",
+        "version_pv_name" : "OSC:LR20:20:FS_WATCHDOG.DESC",
+        "laser_trigger" : "TRIG:LR20:LS02:TDES",
+        "trig_in_ticks" : false,
+        "reverse_counter" : 1,
+        "use_secondary_calibration" : false,
+        "use_drift_correction" : false,
+        "use_dither" : false,
+        "timeout" : 1.0,
+        "use_combined_counter" : false
+    },
+    "add_config" : {
+    }
+}

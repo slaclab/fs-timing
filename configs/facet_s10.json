@@ -33,6 +33,7 @@
         "tt_stagename" : "DEV:DELAYSTAGE",
         "tt_ipmname" : "DEV:PULSEENERGY",
         "tt_pixscale" : 2.0e-6,
-        "pcavset" : "SXR"
+        "pcavset" : "SXR",
+        "secondary_calibration" : "replace with pv for value"
     }
 }

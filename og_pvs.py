@@ -509,9 +509,9 @@ class PVS():   # creates pvs
         #         print('could not open '+v.name)
         #         print(k)
         #         self.OK = 0 # some error with setting up PVs, can't run, will exit  
-        # self.error_pv = Pv(error_pv_name[self.name]) # open pv
+        self.error_pv = Pv(error_pv_name[self.name]) # open pv
         # self.error_pv.connect(timeout)
-        # self.version_pv = Pv(version_pv_name[self.name])
+        self.version_pv = Pv(version_pv_name[self.name])
         # self.version_pv.connect(timeout)
         # self.version_pv.put(self.version, timeout = 10.0)
         # self.E = error_output(self.error_pv)

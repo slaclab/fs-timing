@@ -77,3 +77,16 @@ systems like the xray/optical cross correlator or phase cavities.
 
 ## Notes on specific key/value pairs in the config dictionary
 
+## Available `add_config` keys
+
+| Key                    | Desc                                                                                                                                                                             | "Default"  | Acceptable Values                    | Type   |
+|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------------------------------------|--------|
+| feedback_delay         | This is the internal wait time for processing the feedback function input to the laser phase control                                                                             | 0.1        | Typically anywhere from 0.1 to 1 Hz  | float  |
+| tt_pvname              | `DEV:TIMETOOL:TTALL`; PV string for the packaged timetool waveform, appropriate for an installation                                                                              | n/a        | n/a                                  | str    |
+| fb_matlab_start        | The default starting address in matlab/notepad pvs for the processed feedback data                                                                                               | 20         |                                      | int    |
+| fb_matlab_prefix       | `DEV:VIT:matlab:` the pv string to prefix matlab/notepad pvs                                                                                                                     | n/a        | n/a                                  | str    |
+| tt_stagename           | `DEV:DELAYSTAGE` PV for the timetool delay stage                                                                                                                                 | n/a        | n/a                                  | str    |
+| tt_ipname              | `DEV:PULSEENERGY` PV for the intensity monitor (I think)                                                                                                                         | n/a        | n/a                                  | str    |
+| tt_pixscale            | PV for the the detector output scaling, in case the output from the DAQ is not scaled correctly (ie. Generally would be unity, except for misconfigurations on the DAQ/TT side)  | 0.000002   |                                      | float  |
+| pcavset                | Which phase cavity set should be used for arrival time tracking                                                                                                                  | SXR        | {SXR, HXR}                           | str    |
+| secondary_calibration  | `DEV:INPUTPV` This is a PV used for the secondary calibration system, generally deprecated but left in for backwards compatibility                                               | n/a        | n/a                                  | str    |
