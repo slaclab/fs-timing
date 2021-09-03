@@ -1,0 +1,31 @@
+{
+    "config_meta" : {
+        "author" : "Justin May",
+        "author_date" : "2021-09-02",
+        "desc" : "This is a configuration for the caproto testbed."
+    },
+    "config" : {
+        "name" : "ltioc",
+        "type" : "SIM",
+        "genpv_base" : "ltioc:",
+        "dev_base" : "ltioc:",
+        "matlab_pv_base" : "ltioc:matlab:",
+        "matlab_pv_offsets" : 1,
+        "matlab_pv_digits" : 2,
+        "counter_base" : "ltioc:TI:",
+        "freq_counter" : "ltioc:cavityFrequency",
+        "phase_motor" : "ltioc:phase_motor",
+        "error_pv_name" : "ltioc:error_pv",
+        "version_pv_name" : "ltioc:version_pv.DESC",
+        "laser_trigger" : "ltioc:trigger",
+        "trig_in_ticks" : false,
+        "reverse_counter" : 1,
+        "use_secondary_calibration" : false,
+        "use_drift_correction" : false,
+        "use_dither" : false,
+        "timeout" : 1.0,
+        "use_combined_counter" : false
+    },
+    "add_config" : {
+    }
+}

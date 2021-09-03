@@ -1,4 +1,3 @@
-
 #femto.py  program to control laser femtosecond timing
 
 # major version rework through 2021-07-21 - JM 
@@ -7,16 +6,24 @@
 
 import time
 import math
-from pylab import *
-import watchdog
-from psp.Pv import Pv
+import numpy
+# from pylab import *
+# import watchdog
+try:
+    from psp.Pv import Pv as PV
+except ModuleNotFoundError:
+    try:
+        from epics.pv import PV
+    except ModuleNotFoundError:
+        print('no epics pv support located within environment')
+# from psp.Pv import Pv
 import sys
 import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
-from .support import *
-from femtoconfig import Config
-import TimeIntervalCounter
-import PhaseMotor
+from support import watchdog3 as watchdog
+from support.femtoconfig import Config
+import support.TimeIntervalCounter
+import support.PhaseMotor
 
 class PVS():   # creates pvs
     """ This is the base class that organizes the PVs for operation of the code.
@@ -192,8 +199,8 @@ class locker():  # sets up parameters of a particular locking system
             tout = append(tout, t_tmp) # read timing and put in array
             print('end of loop')
 
-            print(t_tmp')
-            print(self.C.good')
+            print(t_tmp)
+            print(self.C.good)
             counter_good = append(counter_good, self.C.good) # will use to filter data
             if not self.C.good:
                 print('bad counter data')
@@ -322,7 +329,7 @@ class locker():  # sets up parameters of a particular locking system
             # modified to not use drift_correction_offset or drift_correction_multiplier:
             de  = (dc-do)  # (hopefully) fresh pix value from TT script
             if ( self.drift_initialized ):
-                if ( dc <> self.dc_last ):           
+                if ( dc != self.dc_last ):           
                     if ( accum == 1 ): # if drift correction accumulation is enabled
                         #TODO: Pull these limits from the associated matlab PV
                         self.drift_last = self.drift_last + (de- self.drift_last) / ds; # smoothing
@@ -409,7 +416,7 @@ class locker():  # sets up parameters of a particular locking system
             self.P.E.write_error( 'non-integer bucket error, cant fix')
             return
         self.P.E.write_error( 'Fixing Jump')
-        print'fixing jump'
+        print('fixing jump')
         M = PhaseMotor(self.P) #phase control motor
         M.wait_for_stop()  # just ot be sure
         old_pc = M.get_position()
@@ -585,7 +592,7 @@ def ffun( x, a, b):
 def femto(config_fpath='NULL'):
     """ The parent logical object for an instance of femto.py; initializes
     objects and manages the run loop."""
-    config = femtoConfig()
+    config = Config()
     P = PVS(name)
     if P.OK == 0:
         return
@@ -647,8 +654,8 @@ def femto(config_fpath='NULL'):
                 L.set_time() # set time read earlier    
             D.run()  # deals with degreees S band conversion    
             #P.E.write_error('Laser OK')
-        except:   # catch any otehrwise uncaught error.
-            print(sys.exc_info()[0] # print error I hope)
+        except:   # catch any otherwise uncaught error.
+            print(sys.exc_info()[0]) # print error I hope)
             del P  #does this work?
             print('UNKNOWN ERROR, trying again')
    
