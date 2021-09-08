@@ -4,7 +4,7 @@ class Trigger(object):
 
     def __init__ (self, P):  # P is a pv list that includes trigger scaling information
         self.P = P
-        if self.P.trig_in_ticks:
+        if self.P.config.trig_in_ticks:
             self.scale =1000.0/119.0  # 119MHz, 8 ns ticks 
         else:
             self.scale = 1 # trigger is in ns units

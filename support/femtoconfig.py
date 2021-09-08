@@ -20,8 +20,8 @@ class Config(object):
         potential future overload."""
         # Validate path
         if not os.path.exists(filename):
-            print("Configuration filename does not exist.")
-            return
+            print("Configuration filename: %s does not exist."%(filename))
+            raise ValueError
         # Determine file type
         ftype = os.path.splitext(filename)
         if ftype[1]==".json":
@@ -157,6 +157,7 @@ class Config(object):
             pvvals.append(("counter_low",self.config["config"]["counter_base"]+"GetMeasMean.LOW"))
             pvvals.append(("counter_high",self.config["config"]["counter_base"]+"GetMeasMean.HIGH"))
 
+        self.is_atca = 0
         if self.config["config"]["type"] == "ATCA":
             self.is_atca = 1
             pvvals.append(('lock_enable',self.config["add_config"]["atca_base"]+'RF_LOCK_ENABLE'))

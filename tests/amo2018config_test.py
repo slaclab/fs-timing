@@ -1,12 +1,10 @@
 """femtoconfig tests"""
 
-import femtoconfig
+from support import femtoconfig
 import unittest
 import og_pvs
 
-class test_testReadConfig(unittest.TestCase):
-    def test_invalidPathName(self):
-        self.assertRaises(TypeError,femtoconfig.Config().readConfig('test'))
+
 
 class test_pvconfigmatch(unittest.TestCase):
     @classmethod

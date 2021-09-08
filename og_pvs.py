@@ -9,7 +9,7 @@ from epics import PV as Pv # switching in this lib, doesn't necessarily match on
 import sys
 import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
-from femtoconfig import Config
+from support.femtoconfig import Config
 
 class PVS():   # creates pvs
     def __init__(self, nx='NULL'):
