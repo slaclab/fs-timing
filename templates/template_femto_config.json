@@ -6,6 +6,7 @@
     },
     "config" : {
         "name" : "replace with system identifier",
+        "type" : "[SIM,ATCA]",
         "genpv_base" : "forms the initial pv base string",
         "dev_base" : "in case this is different from base",
         "matlab_pv_base" : "again, change this if different; commonly dev_base + 'matlab'",

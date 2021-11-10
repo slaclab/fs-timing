@@ -29,7 +29,7 @@ from support.PVS import PVS
 from support.ErrorOutput import error_output
 from support.Degrees import degrees_s
 from support.ErrorOutput import error_output
-from support.laserlockerversions.Gen1LaserLocker import locker as Gen1LaserLocker
+from support.laserlockerversions.Gen1LaserLocker import LaserLocker as Gen1LaserLocker
 from support.laserlockerversions.Gen2LaserLocker import LaserLocker as Gen2LaserLocker
 from support.Trigger import Trigger
 
@@ -55,9 +55,9 @@ def femto(config_fpath='NULL'):
     if W.error:
         return
     if P.config.is_atca:
-        L = Gen2LaserLocker(P,W)
+        L = Gen2LaserLocker(P.E,P,W)
     else:
-        L = Gen1LaserLocker(P,W)
+        L = Gen1LaserLocker(P.E,P,W)
     # L = locker(P,W) #set up locking system parameters
     L.locker_status()  # check locking sysetm / laser status
     P.E.write_error( {"value":L.message,"lvl":2})
