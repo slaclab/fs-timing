@@ -21,7 +21,7 @@ class LaserLocker(object):
         """Rolls up the status checks for a laser into a boolean response of
         whether the laser is in a "good" state or not."""
         self.E.write_error({'value':'LaserLocker super method: locker_status called','lvl':1})
-        return False
+        return True
 
     def isLaserTimeOk(self):
         """Check the time of the laser and the setpoint and return if the value

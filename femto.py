@@ -9,15 +9,15 @@ import time
 import math
 import numpy
 # from pylab import *
+# try:
+#     from psp.Pv import Pv 
+#     print('using psp.Pv')
+# except ModuleNotFoundError:
 try:
-    from psp.Pv import Pv 
-    print('using psp.Pv')
+    from epics.pv import PV as Pv
+    # print('using epics.pv')
 except ModuleNotFoundError:
-    try:
-        from epics.pv import PV as Pv
-        # print('using epics.pv')
-    except ModuleNotFoundError:
-        print('no epics pv support located within environment')
+    print('no epics pv support located within environment')
 import sys
 import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
@@ -94,7 +94,7 @@ def femto(config_fpath='NULL'):
                 P.E.write_error({'value':' calibration done',"lvl":2})
                 # P.E.write_error( ' calibration done')
                 continue
-            if  P.use_secondary_calibration:  # run calibration against scope
+            if  P.config.use_secondary_calibration:  # run calibration against scope
                 if P.get('secondary_calibration_enable'): # not requested  
                     P.put('ok', 0)
                     P.put('busy', 1) # sysetm busy calibrating

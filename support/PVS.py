@@ -1,12 +1,12 @@
+# try:
+#     from psp.Pv import Pv 
+#     print('using psp.Pv')
+# except ModuleNotFoundError:
 try:
-    from psp.Pv import Pv 
-    print('using psp.Pv')
+    from epics.pv import PV as Pv
+    # print('using epics.pv')
 except ModuleNotFoundError:
-    try:
-        from epics.pv import PV as Pv
-        # print('using epics.pv')
-    except ModuleNotFoundError:
-        print('no epics pv support located within environment')
+    print('no epics pv support located within environment')
 
 from numpy import log
 from support.femtoconfig import Config
