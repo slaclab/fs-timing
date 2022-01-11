@@ -7,11 +7,14 @@ class error_output():
         self.localLogLvl = localLogLvl
         self.epicsLogLvl = epicsLogLvl
   
-    def write_error(self, txt):
-        n = len(txt['value'])
-        if txt['lvl'] >= self.localLogLvl:
-            print(txt['value'])
-        if txt['lvl'] >= self.epicsLogLvl:
-            if n > self.maxlen:
-                txt['value'] = txt['value'][0:self.maxlen]
-            self.pv.put(value = txt['value'], timeout = 1.0)
+    def write_error(self, error):
+        print(error)
+        if error:
+            n = len(error['value'])
+            if error['lvl'] >= self.localLogLvl:
+                print(error['value'])
+            if error['lvl'] >= self.epicsLogLvl:
+                if n > self.maxlen:
+                    error['value'] = error['value'][0:self.maxlen]
+                self.pv.put(value = error['value'], timeout = 1.0)
+        

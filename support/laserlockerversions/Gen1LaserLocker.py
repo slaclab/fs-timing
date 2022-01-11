@@ -1,5 +1,10 @@
 from support.laserlockerversions.LaserLocker import LaserLocker
 from ..TimeIntervalCounter import TimeIntervalCounter
+from ..Trigger import Trigger
+from ..PhaseMotor import PhaseMotor
+from ..Sawtooth import Sawtooth
+import numpy as np
+import time
 
 class LaserLocker(LaserLocker):
     """Gen 1 Laser locker object, inheriting from generalized LaserLocker object."""
@@ -72,6 +77,53 @@ class LaserLocker(LaserLocker):
         self.P.put('ok',status)
         return status
 
+    def check_jump(self):
+        """ Gen1 implementation of checking whether there is a bucket jump."""
+        
+        print('jump detect') 
+        T = Trigger(self.P) # trigger class
+        print('setup phase motor')
+        M = PhaseMotor(self.P) # phase motor     
+        print('self.C.get_time')
+        t = self.C.get_time()
+        if t > -900000.0:      
+            self.P.put('error', t - self.P.get('time')) # timing error (reads counter)      
+        print('get trigger time')
+        t_trig = T.get_ns()
+        print('got trigger time')
+        print('get motor pos')
+        pc = M.get_position()
+        try:
+            print('get delay and offset pvs')
+            self.d['delay'] = self.P.get('delay')
+            self.d['offset'] = self.P.get('offset')
+        except:
+            print('problem reading delay and offset pvs')
+
+        S = Sawtooth(pc, t_trig, self.d['delay'], self.d['offset'], 1/self.laser_f) # calculate time        
+        self.terror = t - S.t # error in ns
+        self.buckets = round(self.terror * self.locking_f)
+        self.bucket_error = self.terror - self.buckets / self.locking_f
+        self.exact_error = self.buckets / self.locking_f  # number of ns to move (exactly)
+        if (self.C.range > (2 * self.max_jump_error)) or (self.C.range == 0):  # too wide a range of measurements
+            self.buckets = 0  # do not count a bucket error if readings are not consistant
+            # self.P.E.write_error( 'counter not stable')
+            self.E.write_error({'value':u"counter not stable",'lvl':2})
+            return
+        if abs(self.bucket_error) > self.max_jump_error:
+            self.buckets = 0
+            # self.P.E.write_error( 'not an integer number of buckets')
+            self.E.write_error({'value':u"not an integer number of buckets",'lvl':2})
+        if self.buckets != 0:
+            print('bucket jump - buckets, error')
+
+            print('buckets')
+
+            print(self.buckets)
+            print(self.bucket_error)
+        # self.P.E.write_error( 'Laser OK')      # laser is OK
+        self.E.write_error({'value':u"Laser OK",'lvl':2})
+
 class locker():  # sets up parameters of a particular locking system
     #def __init__(self, P, W):  # Uses PV list
         #  self.P = P
@@ -142,9 +194,9 @@ class locker():  # sets up parameters of a particular locking system
         T = Trigger(self.P)  # trigger class
         ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
         self.P.put('busy', 1) # set busy flag
-        tctrl = linspace(0, self.calib_range, self.calib_points) # control values to use
-        tout = array([]) # array to hold measured time data
-        counter_good = array([]) # array to hold array of errors
+        tctrl = np.linspace(0, self.calib_range, self.calib_points) # control values to use
+        tout = np.array([]) # array to hold measured time data
+        counter_good = np.array([]) # array to hold array of errors
         t_trig = T.get_ns() # trigger time in nanoseconds
         M.move(0)  # move to zero to start 
         M.wait_for_stop()
@@ -174,37 +226,37 @@ class locker():  # sets up parameters of a particular locking system
                  t_tmp = self.C.get_time()  # read time
                  if t_tmp != 0: # have a new reading
                      break # break out of loop
-            tout = append(tout, t_tmp) # read timing and put in array
+            tout = np.append(tout, t_tmp) # read timing and put in array
             print('end of loop')
 
             print(t_tmp)
             print(self.C.good)
-            counter_good = append(counter_good, self.C.good) # will use to filter data
+            counter_good = np.append(counter_good, self.C.good) # will use to filter data
             if not self.C.good:
                 print('bad counter data')
 
                 self.P.E.write_error('timer error, bad data - continuing to calibrate' ) # just for testing
         M.move(tctrl[0])  # return to original position    
-        minv = min(tout[nonzero(counter_good)])+ self.delay_offset
+        minv = min(tout[np.nonzero(counter_good)])+ self.delay_offset
 
         print('min v is')
         
         print(minv)
         period = 1/self.laser_f # just defining things needed in sawtooth -  UGLY
         delay = minv - t_trig # more code cleanup neded in teh future.
-        err = array([]) # will hold array of errors
-        offset = linspace(0, period, ns)  # array of offsets to try
+        err = np.array([]) # will hold array of errors
+        offset = np.linspace(0, period, ns)  # array of offsets to try
         for x in offset:  # here we blindly try different offsets to see what works
-            S = sawtooth(tctrl, t_trig, delay, x, period) # sawtooth sim
-            err = append(err, sum(counter_good*S.r * (S.t - tout)**2))  # total error
-        idx = argmin(err) # index of minimum of error
+            S = Sawtooth(tctrl, t_trig, delay, x, period) # sawtooth sim
+            err = np.append(err, sum(counter_good*S.r * (S.t - tout)**2))  # total error
+        idx = np.argmin(err) # index of minimum of error
         print('offset, delay  trig_time')
 
         print(offset[idx])
         print(delay)
         print(t_trig)
-        S = sawtooth(tctrl, t_trig, delay, offset[idx], period)
-        self.P.put('calib_error', sqrt(err[idx]/ self.calib_points))
+        S = Sawtooth(tctrl, t_trig, delay, offset[idx], period)
+        self.P.put('calib_error', np.sqrt(err[idx]/ self.calib_points))
         self.d['delay'] = delay
         self.d['offset'] = offset[idx]
         self.P.put('delay', delay)
@@ -227,15 +279,15 @@ class locker():  # sets up parameters of a particular locking system
         tpos = -0.5 # nanoseconds range above current 12 ok
         cycles = 30
         t0 = M.get_position() # current motor position
-        tset = array([]) # holds target times
-        tread = array([]) # holds readback times
+        tset = np.array([]) # holds target times
+        tread = np.array([]) # holds readback times
         for n in range(0,cycles-1):  # loop
-            t = t0 + tneg + random.random()*(tpos - tneg) # random number in range
-            tset = append(tset, t)  # collect list of times
+            t = t0 + tneg + np.random.random()*(tpos - tneg) # random number in range
+            tset = np.append(tset, t)  # collect list of times
             M.move(t) # move to new position
             time.sleep(ptime)# long wait for now
             tr = 1e9 * self.P.get('secondary_calibration')
-            tread = append(tread, tr)
+            tread = np.append(tread, tr)
             print(n)
             print(t)
             print(tr)

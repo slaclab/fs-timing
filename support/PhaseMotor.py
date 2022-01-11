@@ -1,3 +1,5 @@
+import time
+
 class PhaseMotor(object):
     """The PhaseMotor class encapsulates the functionality of the phase control
     for a laser."""
@@ -13,9 +15,9 @@ class PhaseMotor(object):
 
     def wait_for_stop(self):
         #print('wait for stop')
-        if self.P.is_atca: # ATCA shifts are instantaneous (~2 seconds maximum)
+        if self.P.config.is_atca: # ATCA shifts are instantaneous (~2 seconds maximum)
             #print('but i is atca')
-            pause(0.1) # fixed delay for ATCA time shifts
+            time.sleep(0.1) # fixed delay for ATCA time shifts
             return
         for n in range (0, self.max_tries):
             try:

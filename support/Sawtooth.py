@@ -1,6 +1,7 @@
 import time
 import math
-from pylab import *
+import numpy as np
+# from pylab import *
 # import watchdog
 # from psp.Pv import Pv
 import sys
@@ -24,7 +25,7 @@ class Sawtooth(object):
         trig_out = t_trig + delay
         laser_t0 = t0 + offset
         tx = trig_out - laser_t0
-        nlaser = ceil(tx / period)
+        nlaser = np.ceil(tx / period)
         self.t = t0 + offset + nlaser * period
         tr = self.t - trig_out
-        self.r = (0.5 + copysign(.5, tr - 0.2 * period)) * (0.5 + copysign(.5, .8 * period - tr))
+        self.r = (0.5 + np.copysign(.5, tr - 0.2 * period)) * (0.5 + np.copysign(.5, .8 * period - tr))
