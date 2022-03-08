@@ -16,6 +16,7 @@ class TimeIntervalCounter(object):
         self.rj = ring() # ring to hold jitter data
         self.rj.add_element(self.P.get('counter_jitter'))
         self.range = 0 # range of data
+        
     def get_time(self):
         self.good = 0  # assume bad unless we fall through all the traps
         self.range = 0; # until we overwrite

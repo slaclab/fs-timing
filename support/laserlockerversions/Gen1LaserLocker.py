@@ -5,6 +5,7 @@ from ..PhaseMotor import PhaseMotor
 from ..Sawtooth import Sawtooth
 import numpy as np
 import time
+import math
 
 class LaserLocker(LaserLocker):
     """Gen 1 Laser locker object, inheriting from generalized LaserLocker object."""
@@ -30,8 +31,8 @@ class LaserLocker(LaserLocker):
         self.locker_file_name = 'locker_data_' + self.P.name + '.pkl'
         self.timing_buffer = 0.0  # nanoseconds, how close to edge we can go in ns
         self.d = dict()
-        self.d['delay'] =  self.P.get('delay')
-        self.d['offset'] = self.P.get('offset')
+        self.d['delay'] =  self.P.get('delay') # calibration component
+        self.d['offset'] = self.P.get('offset') # calibration component
         self.delay_offset = 0  # kludge to avoide running near sawtooth edge
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
@@ -123,6 +124,164 @@ class LaserLocker(LaserLocker):
             print(self.bucket_error)
         # self.P.E.write_error( 'Laser OK')      # laser is OK
         self.E.write_error({'value':u"Laser OK",'lvl':2})
+    
+    def set_time(self):
+        """ Basic move function. 
+        
+        This function is the core move command for the laser locker, used by higher level functions.
+        """
+        t = self.P.get('time')
+        if math.isnan(t):
+            self.P.E.write_error('desired time is NaN')
+            return
+        if t < self.min_time or t > self.max_time:
+            self.P.E.write_error('need to move TIC trigger')
+            return
+        t_high = self.P.get('time_hihi')
+        t_low = self.P.get('time_lolo')
+        if t > t_high:
+            t = t_high
+        if t < t_low:
+            t = t_low
+        T = Trigger(self.P) # set up trigger
+        M = PhaseMotor(self.P)
+        laser_t = t - self.d['offset']  # Just copy workign matlab, don't think!
+        nlaser = np.floor(laser_t * self.laser_f)
+        pc = t - (self.d['offset'] + nlaser / self.laser_f)
+        pc = np.mod(pc, 1/self.laser_f)
+        ntrig = round((t - self.d['delay'] - (1/self.trigger_f)) * self.trigger_f) # paren was after laser_f
+        #ntrig = round((t - self.d['delay'] - (0.5/self.laser_f)) * self.trigger_f) # paren was after laser_f
+        trig = ntrig / self.trigger_f
+
+        if self.P.config.use_drift_correction:
+            dc = self.P.get('drift_correction_signal')*1.0e-6 # TODO need to convert this to a configuration/control parameter
+            do = self.P.get('drift_correction_offset') 
+            dg = self.P.get('drift_correction_gain')
+            ds = self.P.get('drift_correction_smoothing')
+            self.drift_last = self.P.get('drift_correction_value')
+            accum = self.P.get('drift_correction_accum')
+            # modified to not use drift_correction_offset or drift_correction_multiplier:
+            de  = (dc-do)  # (hopefully) fresh pix value from TT script
+            if ( self.drift_initialized ):
+                if ( dc != self.dc_last ):           
+                    if ( accum == 1 ): # if drift correction accumulation is enabled
+                        #TODO: Pull these limits from the associated matlab PV
+                        self.drift_last = self.drift_last + (de- self.drift_last) / ds; # smoothing
+                        self.drift_last = max(-.015, self.drift_last) # floor at 15ps
+                        self.drift_last = min(.015, self.drift_last)#
+                        self.P.put('drift_correction_value', self.drift_last)
+                        self.dc_last = dc
+            else:
+                self.drift_last = de # initialize to most recent reading
+                # TODO I needed to comment these to get the live code working, but if the units are scaled correctly, shouldn't be a problem
+                #self.drift_last = max(-.015, self.drift_last) # floor at 15ps
+                #self.drift_last = min(.015, self.drift_last)#
+                self.dc_last = dc
+                self.drift_initialized = True # will average next time (ugly)    
+
+            pc = pc - dg * self.drift_last; # fix phase control. 
+
+        if self.P.config.use_secondary_calibration: # make small corrections based on another calibration
+            sa = self.P.get('secondary_calibration_s')
+            ca = self.P.get('secondary_calibration_c')
+            pc = pc - sa * np.sin(pc * 3.808*2*np.pi) - ca * np.cos(pc * 3.808*2*np.pi) # fix phase
+
+        if self.P.config.use_dither:
+            dx = self.P.get('dither_level') 
+            pc = pc + (np.random.random()-0.5)* dx / 1000 # uniformly distributed random. 
+
+        if self.P.get('enable_trig'): # Full routine when trigger can move
+            if T.get_ns() != trig:   # need to move
+                T.set_ns(trig) # sets the trigger
+
+        pc_diff = M.get_position() - pc  # difference between current phase motor and desired time        
+        if abs(pc_diff) > 1e-6:
+            M.move(pc) # moves the phase motor
+
+    def calibrate(self,report=True):
+        """ Sweep fine resolution laser phase to detect the edges of timing system triggers.
+        
+        This function is one of the key functions of the locker, and depends on the generation of the laser. The original version of this routine was more of a brute force system, sampling across the range of the locker, however the v2 implementation makes this a bit more adaptive, and provides for the online monitoring of the calibration, as well, as plotting the output of the calibration routine.
+        """
+        M = PhaseMotor(self.P)  # creates a phase motor control object (PVs were initialized earlier)
+        T = Trigger(self.P)  # trigger class
+        ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
+        self.P.put('busy', 1) # set busy flag
+        tctrl = np.linspace(0, self.calib_range, self.calib_points) # control values to use
+        tout = np.array([]) # array to hold measured time data
+        counter_good = np.array([]) # array to hold array of errors
+        t_trig = T.get_ns() # trigger time in nanoseconds
+        M.move(0)  # move to zero to start 
+        M.wait_for_stop()
+        for x in tctrl:  #loop over input array 
+            print('calib start')
+
+            self.W.check() # check watchdog
+            print('post watchdog')
+
+            if self.W.error:
+                return    
+            if not self.P.get('calibrate'):
+                return   # canceled calibration
+            print('move motor')
+
+            M.move(x)  # move motor
+            print('wait for stop')
+
+            M.wait_for_stop()
+            print('sleep')
+
+            time.sleep(0.2)  #Don't know why this is needed
+            t_tmp = 0 # to check if we ever get a good reading
+            print('get read')
+
+            for n in range (0, 25): # try to see if we can get a good reading
+                 t_tmp = self.C.get_time()  # read time
+                 if t_tmp != 0: # have a new reading
+                     break # break out of loop
+            tout = np.append(tout, t_tmp) # read timing and put in array
+            print('end of loop')
+
+            print(t_tmp)
+            print(self.C.good)
+            counter_good = np.append(counter_good, self.C.good) # will use to filter data
+            if not self.C.good:
+                print('bad counter data')
+
+                self.P.E.write_error('timer error, bad data - continuing to calibrate' ) # just for testing
+        M.move(tctrl[0])  # return to original position    
+        minv = min(tout[np.nonzero(counter_good)])+ self.delay_offset
+
+        print('min v is')
+        
+        print(minv)
+        period = 1/self.laser_f # just defining things needed in sawtooth -  UGLY
+        delay = minv - t_trig # more code cleanup neded in teh future.
+        err = np.array([]) # will hold array of errors
+        offset = np.linspace(0, period, ns)  # array of offsets to try
+        for x in offset:  # here we blindly try different offsets to see what works
+            S = Sawtooth(tctrl, t_trig, delay, x, period) # sawtooth sim
+            err = np.append(err, sum(counter_good*S.r * (S.t - tout)**2))  # total error
+        idx = np.argmin(err) # index of minimum of error
+        print('offset, delay  trig_time')
+
+        print(offset[idx])
+        print(delay)
+        print(t_trig)
+        S = Sawtooth(tctrl, t_trig, delay, offset[idx], period)
+        self.P.put('calib_error', np.sqrt(err[idx]/ self.calib_points))
+        self.d['delay'] = delay
+        self.d['offset'] = offset[idx]
+        self.P.put('delay', delay)
+        self.P.put('offset', offset[idx])
+        #print('PLOTTING CALIBRATION')
+
+        #plot(tctrl, tout, 'bx', tctrl, S.r * S.t, 'r-') # plot to compare
+        #plot(tctrl, tout, 'bx', tctrl, S.t, 'r-') # plot to compare
+        #plot(tctrl, S.r *(tout - S.t), 'gx')
+        #show()
+        M.wait_for_stop() # wait for motor to stop moving before exit
+        self.P.put('busy', 0)
 
 class locker():  # sets up parameters of a particular locking system
     #def __init__(self, P, W):  # Uses PV list

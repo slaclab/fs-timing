@@ -8,12 +8,11 @@ class error_output():
         self.epicsLogLvl = epicsLogLvl
   
     def write_error(self, error):
-        print(error)
         if error:
             n = len(error['value'])
-            if error['lvl'] >= self.localLogLvl:
+            if error['lvl'] <= self.localLogLvl:
                 print(error['value'])
-            if error['lvl'] >= self.epicsLogLvl:
+            if error['lvl'] <= self.epicsLogLvl:
                 if n > self.maxlen:
                     error['value'] = error['value'][0:self.maxlen]
                 self.pv.put(value = error['value'], timeout = 1.0)

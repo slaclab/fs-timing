@@ -1,12 +1,19 @@
 from support.laserlockerversions.LaserLocker import LaserLocker
+from ..TimeIntervalCounter import TimeIntervalCounter
+from ..Trigger import Trigger
+from ..PhaseMotor import PhaseMotor
+from ..Sawtooth import Sawtooth
+import numpy as np
+import time
+import math
 
 class LaserLocker(LaserLocker):
     """Gen 2 Laser locker object, inheriting from generalized LaserLocker object."""
     def __init__(self,errorLog,pvs,watchdog):
         super().__init__(errorLog,pvs,watchdog)
         self.f0 = 1.3  # Reference frequency in GHz
-        self.rmin = 56.0 # Divide ratio to 8.5MHz - not really needed
-        self.min_f = self.f0 / self.rmin  # 8.5MHz
+        self.rmin = 28.0 # Divide ratio to 46.429 MHz - not really needed
+        self.min_f = self.f0 / self.rmin  # 46.429 MHz
         self.laser_n = self.rmin / 7 # laser frequency ratio from 8.5MHz
         self.laser_f = self.min_f * self.laser_n # laser frequency
         self.locking_n = self.rmin * 8.0 # locking number ratio to 8.5MHz

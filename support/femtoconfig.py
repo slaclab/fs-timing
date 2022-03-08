@@ -112,6 +112,7 @@ class Config(object):
         #pvvals.append(("freq_counter",self.config["config"]["dev_base"]+""))
         #pvvals.append(("",self.config["config"]["dev_base"]+""))
         pvvals.append(("phase_motor_rb",self.config["config"]["phase_motor"]+".RBV"))
+        pvvals.append(("phase_motor_dmov",self.config["config"]["phase_motor"]+".DMOV"))
         pvvals.append(("freq_sp",self.config["config"]["dev_base"]+"FREQ_SP"))
         pvvals.append(("freq_err",self.config["config"]["dev_base"]+"FREQ_ERR"))
         pvvals.append(("rf_pwr",self.config["config"]["dev_base"]+"CH1_RF_PWR"))
