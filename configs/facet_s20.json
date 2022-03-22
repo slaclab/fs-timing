@@ -5,14 +5,14 @@
         "desc" : "Translated configuration file for FACET-II Experiment laser"
     },
     "config" : {
-        "name" : "FACET",
+        "name" : "FACET S20",
         "type" : "SIM",
         "genpv_base" : "OSC:LA20:10:",
         "dev_base" : "OSC:LA20:10:",
         "matlab_pv_base" : "SIOC:SYS1:ML00:AO",
         "matlab_pv_offsets" : 451,
         "matlab_pv_digits" : 3,
-        "counter_base" : "UTIC:LA20:10:",
+        "counter_base" : "DIAG:LA20:LS22:",
         "freq_counter" : "OSC:LA20:10:FREQ_RBCK",
         "phase_motor" : "OSC:LA20:10:M1_MOTR_IQ",
         "error_pv_name" : "OSC:LA20:10:FS_STATUS",
