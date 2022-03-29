@@ -48,7 +48,7 @@ def femto(config_fpath='NULL'):
     """ The parent logical object for an instance of femto.py; initializes
     objects and manages the run loop."""
     config = Config()
-    P = PVS(config_fpath,epicsdebug=False,localdebug=False)
+    P = PVS(config_fpath,epicsdebug=False,localdebug=True)
     if P.OK == 0:
         return
     W = watchdog.watchdog(P.config.pvlist['watchdog'])

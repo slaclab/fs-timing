@@ -60,7 +60,7 @@ class PVS():   # creates pvs
         for k, v in iter(self.config.pvlist.items()):  # now loop over all pvs to initialize
             try:
                 v.connect(timeout) # connect to pv
-                v.get(with_ctrlvars=True, timeout=1.0) # get data
+                v.get(with_ctrlvars=False, timeout=1.0) # get data
             except: # for now just fake it
                 self.E.write_error({'value':'could not open '+v.__str__(),'lvl':2})
                 self.E.write_error({'value':k,'lvl':2})
@@ -72,7 +72,7 @@ class PVS():   # creates pvs
        
     def get(self, name):
         try:
-            self.config.pvlist[name].get(with_ctrlvars=True, timeout=10.0)
+            self.config.pvlist[name].get(with_ctrlvars=False, timeout=10.0)
             return self.config.pvlist[name].value                      
         except:
             self.E.write_error({'value':'PV READ ERROR','lvl':2})
