@@ -23,7 +23,8 @@ import random  # random number generator for secondary calibration
 from scipy.optimize import leastsq # for secondary calibration
 from support import watchdog3 as watchdog
 from support.femtoconfig import Config
-import support.TimeIntervalCounter
+# import support.tic.TimeIntervalCounter
+import support.tic.Keysight as TimeIntervalCounter
 import support.PhaseMotor
 from support.PVS import PVS
 from support.ErrorOutput import error_output
