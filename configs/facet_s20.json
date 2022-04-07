@@ -24,6 +24,7 @@
         "use_drift_correction" : false,
         "use_dither" : false,
         "timeout" : 1.0,
+        "TIC_type" : "53230",
         "use_combined_counter" : false
     },
     "add_config" : {

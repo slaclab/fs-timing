@@ -5,7 +5,8 @@
         "desc" : "This is a reference template configuration file for use with femto.py v1.1"
     },
     "config" : {
-        "name" : "replace with system identifier",
+        "name" : "FACET S10",
+        "type" : "SIM",
         "genpv_base" : "forms the initial pv base string",
         "dev_base" : "in case this is different from base",
         "matlab_pv_base" : "again, change this if different; commonly dev_base + 'matlab'",
@@ -24,16 +25,5 @@
         "use_dither" : false,
         "timeout" : 1.0,
         "use_combined_counter" : false
-    },
-    "add_config" : {
-        "feedback_delay" : 0.1, 
-        "tt_pvname" : "DEV:TIMETOOL:TTALL",
-        "fb_matlab_start" : 20,
-        "fb_matlab_prefix" : "DEV:VIT:matlab:",
-        "tt_stagename" : "DEV:DELAYSTAGE",
-        "tt_ipmname" : "DEV:PULSEENERGY",
-        "tt_pixscale" : 2.0e-6,
-        "pcavset" : "SXR",
-        "secondary_calibration" : "replace with pv for value"
     }
 }

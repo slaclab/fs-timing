@@ -35,6 +35,7 @@
         "tt_ipmname" : "DEV:PULSEENERGY",
         "tt_pixscale" : 2.0e-6,
         "pcavset" : "SXR",
+        "TIC_type" : "SR620",
         "secondary_calibration" : "replace with pv for value"
     }
 }

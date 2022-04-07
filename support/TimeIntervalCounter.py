@@ -3,8 +3,6 @@ from .Ring import Ring as ring
 class TimeIntervalCounter(object):
     """The Time Interval Counter class reads interval counter data, gets raw or
     average as needed."""
-    # def __init__(self):
-    #     pass
 
     # class time_interval_counter():  # reads interval counter data, gets raw or average as needed
     def __init__(self, P):
@@ -19,7 +17,7 @@ class TimeIntervalCounter(object):
         
     def get_time(self):
         self.good = 0  # assume bad unless we fall through all the traps
-        self.range = 0; # until we overwrite
+        self.range = 0 # until we overwrite
         tol = self.P.get('counter_jitter_high')
         tmin = self.P.get('counter_low')
         tmax = self.P.get('counter_high')
