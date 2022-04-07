@@ -64,7 +64,7 @@ def femto(config_fpath='NULL'):
     T = Trigger(P)
     T.get_ns()
 #   C = time_interval_counter(P)  # time interval counter device
-    D = degrees_s(P) # manages conversion of degrees to ns and back
+    D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
 #    C.get_time()
     while W.error ==0:   # MAIN PROGRAM LOOP
         time.sleep(0.2)
