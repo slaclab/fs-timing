@@ -15,6 +15,7 @@ class PhaseMotor(object):
 
     def wait_for_stop(self):
         #print('wait for stop')
+        # J.May (4/7/22): This isn't quite true, but we also don't get a phase readback, so I'm leaving this for now, even though one still needs a check against actual movement
         if self.P.config.is_atca: # ATCA shifts are instantaneous (~2 seconds maximum)
             #print('but i is atca')
             time.sleep(0.1) # fixed delay for ATCA time shifts

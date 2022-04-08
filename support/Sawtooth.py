@@ -5,8 +5,8 @@ import numpy as np
 # import watchdog
 # from psp.Pv import Pv
 import sys
-import random  # random number generator for secondary calibration
-from scipy.optimize import leastsq # for secondary calibration
+# import random  # random number generator for secondary calibration
+# from scipy.optimize import leastsq # for secondary calibration
 
 class Sawtooth(object):
     """Utility function for initializing and working with a sawtooth function as

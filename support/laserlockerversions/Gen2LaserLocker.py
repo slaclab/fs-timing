@@ -7,6 +7,7 @@ import numpy as np
 import time
 import math
 import pdb
+from collections import *
 
 class LaserLocker(LaserLocker):
     """Gen 2 Laser locker object, inheriting from generalized LaserLocker object."""
@@ -40,6 +41,7 @@ class LaserLocker(LaserLocker):
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
         self.C = TimeIntervalCounter(self.P) # creates a time interval c
+        self.phasescale = 1.0 # here until IOC edited
 
     def locker_status(self):
         status = super().locker_status()
@@ -134,8 +136,9 @@ class LaserLocker(LaserLocker):
         
         This function is the core move command for the laser locker, used by higher level functions.
         """
-        t = self.P.get('time')
+        t = self.P.get('time') # FS_TGT_TIME
         if math.isnan(t):
+            # A holdover from the matlab days, in for backwards compat.
             self.P.E.write_error('desired time is NaN')
             return
         if t < self.min_time or t > self.max_time:
@@ -143,17 +146,21 @@ class LaserLocker(LaserLocker):
             return
         t_high = self.P.get('time_hihi')
         t_low = self.P.get('time_lolo')
+        # These typically won't be set with a new IOC, so it will keep moves
+        # from occurring...
         if t > t_high:
             t = t_high
         if t < t_low:
             t = t_low
         T = Trigger(self.P) # set up trigger
         M = PhaseMotor(self.P)
-        laser_t = t - self.d['offset']  # Just copy workign matlab, don't think!
-        nlaser = np.floor(laser_t * self.laser_f)
-        pc = t - (self.d['offset'] + nlaser / self.laser_f)
-        pc = np.mod(pc, 1/self.laser_f)
-        ntrig = round((t - self.d['delay'] - (1/self.trigger_f)) * self.trigger_f) # paren was after laser_f
+        laser_t = t - self.d['offset']
+        nlaser = np.floor(laser_t) # chop off the nanoseconds first
+        # nlaser = np.floor(laser_t * self.laser_f)
+        pc = (t - (self.d['offset'] + nlaser))*1000.0*self.phasescale # ..what's left can be done with the oscillator phase
+        # pc = t - (self.d['offset'] + nlaser / self.laser_f)
+        # pc = np.mod(pc, 1/self.laser_f)
+        # ntrig = round((t - self.d['delay'] - (1/self.trigger_f)) * self.trigger_f) # paren was after laser_f
         #ntrig = round((t - self.d['delay'] - (0.5/self.laser_f)) * self.trigger_f) # paren was after laser_f
         trig = ntrig / self.trigger_f
         #pdb.set_trace()
@@ -177,7 +184,8 @@ class LaserLocker(LaserLocker):
                         self.dc_last = dc
             else:
                 self.drift_last = de # initialize to most recent reading
-                # TODO I needed to comment these to get the live code working, but if the units are scaled correctly, shouldn't be a problem
+                # TODO I needed to comment these to get the live code working,
+                #but if the units are scaled correctly, shouldn't be a problem
                 #self.drift_last = max(-.015, self.drift_last) # floor at 15ps
                 #self.drift_last = min(.015, self.drift_last)#
                 self.dc_last = dc
@@ -212,13 +220,34 @@ class LaserLocker(LaserLocker):
         tout = np.array([]) # array to hold measured time data
         counter_good = np.array([]) # array to hold array of errors
         t_trig = T.get_ns() # trigger time in nanoseconds
-        M.move(0)  # move to zero to start 
-        time.sleep(10.0)
+        M.move(0)  # 1. move to zero to start 
+        stability_wait = deque(4)
+        stability_wait.append(0)
+        stable_pass = False
+        while not stable_pass:
+            # TODO: add a counter to timeout this step if the time never
+            # settles; something would be wrong with the laser in that case
+            t_check = self.C.get_time()
+            stab_mean = np.average(stability_wait) # boxcar average
+            if (stab_mean -t_check)/stab_mean <= 0.05:
+                stable_pass = True
+            stability_wait.append(t_check)
+            time.sleep(0.5)
         M.wait_for_stop()
-       # pdb.set_trace()
+        # pdb.set_trace()
+        # 2. Find the trigger edge
+        for t_step in np.arange(t_trig,t_trig+1012,1):
+            T.set_ns(t_step)
+            jump_check = self.C.get_time()
+            if (jump_check - stab_mean) < 3.0*np.std(stability_wait):
+                stability_wait.append(jump_check)
+            else:
+                t_edge = t_step # we jumped greater than 3 sigma, consider this the trigger edge
+        # 3. Sweep oscillator to find the pulse picker edges, starting from
+        #    whatever 0 nominal phase is for the oscilator bucket we are in
         for x in tctrl:  #loop over input array 
-            print('calib start')
-
+            # print('calib start')
+            print('Oscillator sweep')
             self.W.check() # check watchdog
             print('post watchdog')
 
@@ -234,7 +263,7 @@ class LaserLocker(LaserLocker):
             M.wait_for_stop()
             print('sleep')
 
-            time.sleep(1.5)  #Don't know why this is needed
+            time.sleep(1.5)
             t_tmp = 0 # to check if we ever get a good reading
             print('get read')
            # pdb.set_trace()
@@ -255,10 +284,16 @@ class LaserLocker(LaserLocker):
         M.move(tctrl[0])  # return to original position    
         pdb.set_trace()
         minv = min(tout[np.nonzero(counter_good)])+ self.delay_offset
-
-        print('min v is')
-        
-        print(minv)
+        maxv = max(tout[np.nonzero(counter_good)])+ self.delay_offset
+        minv_index = tout[np.nonzero(counter_good)].index(minv)
+        maxv_index = tout[np.nonzero(counter_good)].index(maxv)
+        input_phase_min = tctrl[minv_index]
+        input_phase_max = tctrl[maxv_index]
+        # calculate phase scaling
+        self.phasescale = (maxv-minv)*1000.0/(input_phase_max-input_phase_min)
+        print("Calculated phase scaling: %f"%(self.phasescale))
+        print('min v is: %f'%(minv))
+        # print(minv)
         period = 1/self.laser_f # just defining things needed in sawtooth -  UGLY
         delay = minv - t_trig # more code cleanup neded in teh future.
         err = np.array([]) # will hold array of errors
@@ -272,7 +307,7 @@ class LaserLocker(LaserLocker):
         print(offset[idx])
         print(delay)
         print(t_trig)
-        S = Sawtooth(tctrl, t_trig, delay, offset[idx], period)
+        S = Sawtooth(tctrl, t_trig, delay, offset[idx], period) # Create Sawtooth based on the optimized values
         self.P.put('calib_error', np.sqrt(err[idx]/ self.calib_points))
         self.d['delay'] = delay
         self.d['offset'] = offset[idx]
