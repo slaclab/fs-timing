@@ -136,6 +136,7 @@ class LaserLocker(LaserLocker):
         
         This function is the core move command for the laser locker, used by higher level functions.
         """
+        #pdb.set_trace()
         t = self.P.get('time') # FS_TGT_TIME
         if math.isnan(t):
             # A holdover from the matlab days, in for backwards compat.
@@ -157,12 +158,21 @@ class LaserLocker(LaserLocker):
         laser_t = t - self.d['offset']
         nlaser = np.floor(laser_t) # chop off the nanoseconds first
         # nlaser = np.floor(laser_t * self.laser_f)
-        pc = (t - (self.d['offset'] + nlaser))*1000.0*self.phasescale # ..what's left can be done with the oscillator phase
+        pc = (t - (self.d['offset'])-self.d['delay'])*self.phasescale # ..what's left can be done with the oscillator phase
+        # temporary fix
+        pc = 0.8299*pc+106559.0
+        # wrap the phase around to minimize movement from arbitrary phase shifter home
+        #pdb.set_trace()
+        while pc > 1000.0/(2.0*self.laser_f) or pc < -1000.0/(2.0*self.laser_f):
+            if pc >= 1000.0/(2.0*self.laser_f):
+                pc = pc - 1000.0/self.laser_f
+            if pc < -1000.0/(2.0*self.laser_f):
+                pc = pc + 1000.0/self.laser_f
         # pc = t - (self.d['offset'] + nlaser / self.laser_f)
         # pc = np.mod(pc, 1/self.laser_f)
         # ntrig = round((t - self.d['delay'] - (1/self.trigger_f)) * self.trigger_f) # paren was after laser_f
         #ntrig = round((t - self.d['delay'] - (0.5/self.laser_f)) * self.trigger_f) # paren was after laser_f
-        trig = ntrig / self.trigger_f
+        trig = nlaser / self.trigger_f
         #pdb.set_trace()
         if self.P.config.use_drift_correction:
             dc = self.P.get('drift_correction_signal')*1.0e-6 # TODO need to convert this to a configuration/control parameter
@@ -205,13 +215,16 @@ class LaserLocker(LaserLocker):
         if self.P.get('enable_trig'): # Full routine when trigger can move
             if T.get_ns() != trig:   # need to move
                 T.set_ns(trig) # sets the trigger
+                print("proposed Trigger: %f"%(trig))
 
         pc_diff = M.get_position() - pc  # difference between current phase motor and desired time        
         if abs(pc_diff) > 1e-6:
-            M.move(pc) # moves the phase motor
+            print("proposed phase: %f"%(pc))
+            M.move(pc/1000.0) # moves the phase motor
 
     def calibrate(self,report=True):
         """ Sweep fine resolution laser phase to detect the edges of pulse picker periods."""
+        #pdb.set_trace()
         M = PhaseMotor(self.P)  # creates a phase motor control object (PVs were initialized earlier)
         T = Trigger(self.P)  # trigger class
         ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
@@ -221,7 +234,7 @@ class LaserLocker(LaserLocker):
         counter_good = np.array([]) # array to hold array of errors
         t_trig = T.get_ns() # trigger time in nanoseconds
         M.move(0)  # 1. move to zero to start 
-        stability_wait = deque(4)
+        stability_wait = deque([],4)
         stability_wait.append(0)
         stable_pass = False
         while not stable_pass:
@@ -243,6 +256,7 @@ class LaserLocker(LaserLocker):
                 stability_wait.append(jump_check)
             else:
                 t_edge = t_step # we jumped greater than 3 sigma, consider this the trigger edge
+            time.sleep(1.0)
         # 3. Sweep oscillator to find the pulse picker edges, starting from
         #    whatever 0 nominal phase is for the oscilator bucket we are in
         for x in tctrl:  #loop over input array 
@@ -282,11 +296,12 @@ class LaserLocker(LaserLocker):
 
                 self.P.E.write_error('timer error, bad data - continuing to calibrate' ) # just for testing
         M.move(tctrl[0])  # return to original position    
-        pdb.set_trace()
-        minv = min(tout[np.nonzero(counter_good)])+ self.delay_offset
-        maxv = max(tout[np.nonzero(counter_good)])+ self.delay_offset
-        minv_index = tout[np.nonzero(counter_good)].index(minv)
-        maxv_index = tout[np.nonzero(counter_good)].index(maxv)
+        #pdb.set_trace()
+        index_range = np.floor(1050/(self.calib_range/self.calib_points))
+        minv_index = np.argmin(tout[np.nonzero(counter_good)])
+        maxv_index = np.argmax(tout[minv_index:minv_index+int(index_range)]*np.nonzero(counter_good[minv_index:minv_index+int(index_range)]))+minv_index
+        minv = tout[minv_index]+ self.delay_offset
+        maxv = tout[maxv_index]+ self.delay_offset
         input_phase_min = tctrl[minv_index]
         input_phase_max = tctrl[maxv_index]
         # calculate phase scaling

@@ -14,6 +14,7 @@ class degrees_s(): # manages time control in degrees S-band
         self.last_deg_offset = self.P.get('deg_offset')
         
     def run(self): # checks which changed last. NS given priority
+        #pdb.set_trace()
         ns = self.P.get('time')
         deg = self.P.get('deg_Sband')
         ns_offset = self.P.get('ns_offset')
