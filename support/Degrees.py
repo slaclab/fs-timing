@@ -1,13 +1,15 @@
 import pdb
 
-class degrees_s(): # manages time control in degrees S-band
-    '''Utility class for handling conversion between numerical systems.'''
-    # TODO: expand to include conversion between various time bases, in a way
-    # that readily supports LCLS-2 numerology and timing systems as well.
+class degrees_s():
+    '''Utility class for handling conversion between numerical systems.
+    Currently, the code uses the same legacy pvs which include S-Band in their
+    names and descriptions. It is important to remember that these are actually
+    scaled to the desired frequency which is set in the configuration files.'''
+
     def __init__(self, P,freq):  #P has the list of PVs
         self.P = P
         #pdb.set_trace()
-        self.freq = freq#/1.0e9  # in GHz
+        self.freq = freq # in GHz
         self.last_time = self.P.get('time') # last time entered in contol
         self.last_deg = self.P.get('deg_Sband') # last degrees sband
         self.last_ns_offset = self.P.get('ns_offset')

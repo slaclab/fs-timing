@@ -39,7 +39,7 @@ def fitres(param, tin, tout):  # tin isinput time, tout is measured, param is pa
     return err
         
 def ffun( x, a, b):
-    w0 = 3.808*2*numpy.pi
+    w0 = 2.600*2*numpy.pi
     out = a*numpy.sin(x * w0) + b * numpy.cos(x*w0)
     return out        
 

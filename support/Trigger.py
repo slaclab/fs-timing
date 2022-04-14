@@ -5,9 +5,9 @@ class Trigger(object):
     def __init__ (self, P):  # P is a pv list that includes trigger scaling information
         self.P = P
         if self.P.config.trig_in_ticks:
-            self.scale =1000.0/119.0  # 119MHz, 8 ns ticks 
+            self.scale =1000.0/119.0  # 119MHz, 8 ns ticks; support for EVR systems
         else:
-            self.scale = 1 # trigger is in ns units
+            self.scale = 1 # trigger is in ns units, covers TPR systems
         self.time = self.scale * self.P.get('laser_trigger')    
    
     def get_ns(self):
