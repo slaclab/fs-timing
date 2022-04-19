@@ -11,10 +11,10 @@ import math
 import pdb
 from collections import *
 
-def err(inputs,x,times):
+def err(inputs,x,times,trig):
     """ Error function for fitting."""
-    S = Sawtooth(x,inputs[2],inputs[0],inputs[1],inputs[3])
-    res = sum(S.r * (S.t - times)**2.0)
+    S = Sawtooth(x,trig,inputs[0],inputs[1],inputs[2])
+    res = sum((S.t - times)**2.0)
     return res
 
 class LaserLocker(LaserLocker):
@@ -103,24 +103,30 @@ class LaserLocker(LaserLocker):
         if t > -900000.0:      
             self.P.put('error', t - self.P.get('time')) # timing error (reads counter)      
         self.P.E.write_error({'value':'get trigger time',"lvl":2})
-        t_trig = T.get_ns()
-        self.P.E.write_error({'value':'get motor pos',"lvl":2})
-        pc = M.get_position()
-        #pdb.set_trace()
+        self.terror = t-self.P.get('time') # error between target time and readback time
         try:
             self.P.E.write_error({'value':'get delay and offset PVs',"lvl":2})
             self.d['delay'] = self.P.get('delay')
             self.d['offset'] = self.P.get('offset')
         except:
             self.P.E.write_error({'value':'jump detect: problem reading delay and offset PVs',"lvl":1})
+        if np.abs(self.terror) < 21.0:
+            self.buckets = 0
+            self.bucket_error = 0
+            return
+        t_trig = T.get_ns()
+        self.P.E.write_error({'value':'get motor pos',"lvl":2})
+        pc = M.get_position()
+        #pdb.set_trace()
+        
 
         S = Sawtooth(pc, t_trig, self.d['delay'], self.d['offset'], 1/self.laser_f) # calculate time        
         
-        self.terror = t - S.t # error in ns
-        self.terror = t-self.d['offset']
-        self.terror = t-self.P.get('time')
+        # self.terror = t - S.t # error in ns
+        # self.terror = t-self.d['offset']
+        # self.terror = t-self.P.get('time')
         # self.buckets = round(self.terror * self.locking_f)
-        self.buckets = round(self.terror*self.laser_f*47)
+        self.buckets = np.mod(round(self.terror*self.laser_f*47),47)
         # self.bucket_error = self.terror - self.buckets / self.locking_f
         self.bucket_error = self.terror - self.buckets / (self.laser_f*47)
         # self.exact_error = self.buckets / self.locking_f  # number of ns to move (exactly)
@@ -166,13 +172,13 @@ class LaserLocker(LaserLocker):
         #     t = t_low
         T = Trigger(self.P) # set up trigger
         M = PhaseMotor(self.P)
-        laser_t = t - self.d['offset']
+        laser_t = t - self.d['delay']-self.d['offset']
         nlaser = np.floor(laser_t) # chop off the nanoseconds first
         # nlaser = np.floor(laser_t * self.laser_f)
         # pc = (t - ((self.d['offset'])+self.d['delay'])/1000.0)*self.phasescale # ..what's left can be done with the oscillator phase
         # pc = ((t -
         # self.d['offset'])*1000.0-(t-self.d['offset']))/1000.0*self.phasescale
-        pc = ((t - self.d['offset'])*1000.0)/1000.0*self.phasescale
+        pc = (self.wrapOscillator(t - self.d['offset'])-self.d['delay'])*self.phasescale
         # temporary fix
         # pc = 0.8299*pc+106559.0
         # wrap the phase around to minimize movement from arbitrary phase shifter home
@@ -350,13 +356,14 @@ class LaserLocker(LaserLocker):
         print(t_trig)
 
         print("alt version")
-        res = optimize.differential_evolution(err,bounds=((0.1,1012),(0.1,1012),(0.1,1012),(0.1,1012)),args=(tctrl,tout),tol=0.0001)
+        res = optimize.differential_evolution(err,bounds=((0,1015),(0,1015),(1000,1014)),args=(tctrl,tout,t_trig),mutation=1.2,tol=0.0001,atol=0.000000001)
         S = Sawtooth(tctrl, t_trig, delay, offset[idx], period) # Create Sawtooth based on the optimized values
         with open('calresults.md','w') as fp:
             fp.write("original cal\n")
             fp.write("delay: %f, offset: %f\n"%(delay,offset[idx]))
             fp.write("new cal\n")
-            fp.write("t_trig: %f\ndelay: %f\noffset: %f\nperiod: %f\n---\nfun: %f"%(res.x[2],res.x[0],res.x[1],res.x[3],res.fun))
+            fp.write("t_trig: %f\ndelay: %f\noffset: %f\nperiod: %f\n---\nfun: %f\n"%(t_trig,res.x[0],res.x[1],res.x[2],res.fun))
+        # np.savetxt("caldata.csv",np.stack((tctrl,tout),axis=-1),delimiter=',')
         self.P.put('calib_error', np.sqrt(calerr[idx]/ self.calib_points))
         # self.d['delay'] = delay
         self.d['offset'] = offset[idx]
@@ -392,13 +399,18 @@ class LaserLocker(LaserLocker):
         M.wait_for_stop()
         time.sleep(2)  # 
         # new_offset = self.d['offset'] - (new_pc_fix - old_pc)
-        new_offset = self.d['offset'] - (new_pc - old_pc)
+        new_offset = self.d['offset'] - (wrapped_pc - old_pc)
         self.d['offset'] = new_offset
         self.P.put('offset', new_offset)
+        T = Trigger(self.P) # set up trigger
+        t = T.get_ns()
+        laser_t = t - self.d['offset'] # - self.d['delay']
+        T.set_ns(laser_t)
         self.P.E.write_error({"value":'Done Fixing Jump',"lvl":2})
         bc = self.P.get('bucket_counter') # previous number of jumps
         self.P.put('bucket_counter', bc + 1)  # write incremented number
         print('jump fix done')
+        time.sleep(2)
 
     def wrapOscillator(self,intime):
         """ wrap oscillator phase around max pulse picker rate to keep it from
@@ -407,7 +419,7 @@ class LaserLocker(LaserLocker):
         outtime = intime
         while outtime < 0 or outtime >= self.ppPeriod:
             if outtime < 0:
-                outtime += self.ppPeriod
+                outtime +=  self.ppPeriod
             elif outtime >= self.ppPeriod:
                 outtime -= self.ppPeriod
         return outtime
