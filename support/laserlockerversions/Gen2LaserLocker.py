@@ -178,7 +178,7 @@ class LaserLocker(LaserLocker):
         # pc = (t - ((self.d['offset'])+self.d['delay'])/1000.0)*self.phasescale # ..what's left can be done with the oscillator phase
         # pc = ((t -
         # self.d['offset'])*1000.0-(t-self.d['offset']))/1000.0*self.phasescale
-        pc = (self.wrapOscillator(t - self.d['offset'])-self.d['delay'])*self.phasescale
+        pc = self.wrapOscillator(t - self.d['offset']-self.d['delay'])/self.phasescale
         # temporary fix
         # pc = 0.8299*pc+106559.0
         # wrap the phase around to minimize movement from arbitrary phase shifter home
@@ -241,7 +241,7 @@ class LaserLocker(LaserLocker):
         pc_diff = M.get_position() - pc  # difference between current phase motor and desired time        
         if abs(pc_diff) > 1e-6:
             self.P.E.write_error({'value':"proposed phase: %f"%(pc),"lvl":2})
-            # print("proposed phase: %f"%(pc))
+            print("proposed phase: %f"%(pc))
             M.move(pc) # moves the phase motor
 
     
@@ -309,7 +309,7 @@ class LaserLocker(LaserLocker):
             M.wait_for_stop()
             print('sleep')
 
-            time.sleep(0.5)
+            time.sleep(2.2)
             t_tmp = 0 # to check if we ever get a good reading
             print('get read')
            # pdb.set_trace()
@@ -327,6 +327,7 @@ class LaserLocker(LaserLocker):
                 print('bad counter data')
 
                 self.P.E.write_error({"value":'timer error, bad data - continuing to calibrate',"lvl":2}) # just for testing
+        # pdb.set_trace()
         M.move(tctrl[0])  # return to original position    
         #pdb.set_trace()
         index_range = np.floor(1050/(self.calib_range/self.calib_points))
@@ -337,7 +338,7 @@ class LaserLocker(LaserLocker):
         input_phase_min = tctrl[minv_index]
         input_phase_max = tctrl[maxv_index]
         # calculate phase scaling
-        self.phasescale = (maxv-minv)*1000.0/(input_phase_max-input_phase_min)
+        self.phasescale = (maxv-minv)/(input_phase_max-input_phase_min)
         print("Calculated phase scaling: %f"%(self.phasescale))
         print('min v is: %f'%(minv))
         # print(minv)
@@ -375,6 +376,7 @@ class LaserLocker(LaserLocker):
         #plot(tctrl, tout, 'bx', tctrl, S.t, 'r-') # plot to compare
         #plot(tctrl, S.r *(tout - S.t), 'gx')
         #show()
+        # pdb.set_trace()
         M.wait_for_stop() # wait for motor to stop moving before exit
         self.P.put('busy', 0)
 

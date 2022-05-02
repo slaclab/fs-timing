@@ -17,7 +17,7 @@
         "phase_motor" : "OSC:LGUN:100:PHASE_SWEEP",
         "error_pv_name" : "OSC:LGUN:100:FS_STATUS",
         "version_pv_name" : "2.0.0",
-        "laser_trigger" : "TPR:LGUN:TS01:0:TRG00_SYS2_TDES",
+        "laser_trigger" : "TPR:LGUN:TS01:0:TRG01_SYS2_TDES",
         "trig_in_ticks" : false,
         "reverse_counter" : 1,
         "use_secondary_calibration" : false,
@@ -28,6 +28,6 @@
     },
     "add_config" : {
         "atca_base" : "OSC:LGUN:100:",
-	"deg_conversion_freq" : 185.714e6    
+	"deg_conversion_freq" : 0.185714    
 }
 }

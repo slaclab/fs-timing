@@ -1,4 +1,5 @@
 import time
+import pdb
 
 class PhaseMotor(object):
     """The PhaseMotor class encapsulates the functionality of the phase control
@@ -35,7 +36,9 @@ class PhaseMotor(object):
 
     def move(self, pos): # move motor to new position (no wait).
         #self.P.pvlist['phase_motor'].put(value=pos / self.scale, timeout = 10.0)  # allow long timeout for motor move
-        self.P.put('phase_motor', pos/self.scale) # motor move if needed   
+        # pdb.set_trace()
+        self.P.put('phase_motor', pos/self.scale) # motor move if needed
+        print("M: %f"%(pos/self.scale))
         self.position = pos  # requested position in ns
         self.wait_for_stop() # check
          
