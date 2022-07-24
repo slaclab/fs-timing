@@ -28,6 +28,6 @@
     },
     "add_config" : {
         "atca_base" : "OSC:LGUN:100:",
-	"deg_conversion_freq" : 0.185714    
+	    "deg_conversion_freq" : 0.185714    
 }
 }

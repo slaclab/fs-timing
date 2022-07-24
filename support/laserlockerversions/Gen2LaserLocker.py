@@ -50,7 +50,7 @@ class LaserLocker(LaserLocker):
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
         self.C = TimeIntervalCounter(self.P) # creates a time interval c
-        self.phasescale = 1.0 # here until IOC edited
+        self.phasescale = 1.0981 # here until IOC edited
 
     def locker_status(self):
         status = super().locker_status()
@@ -92,61 +92,7 @@ class LaserLocker(LaserLocker):
         self.P.put('ok',status)
         return status
 
-    def check_jump(self):
-        """ Gen 2 implementation of bucket jump detection."""
-        self.P.E.write_error({'value':'jump detect',"lvl":2})
-        T = Trigger(self.P) # trigger class
-        self.P.E.write_error({'value':'setup phase motor',"lvl":2})
-        M = PhaseMotor(self.P) # phase motor
-        self.P.E.write_error({'value':'counter time',"lvl":2})  
-        t = self.C.get_time()
-        if t > -900000.0:      
-            self.P.put('error', t - self.P.get('time')) # timing error (reads counter)      
-        self.P.E.write_error({'value':'get trigger time',"lvl":2})
-        self.terror = t-self.P.get('time') # error between target time and readback time
-        try:
-            self.P.E.write_error({'value':'get delay and offset PVs',"lvl":2})
-            self.d['delay'] = self.P.get('delay')
-            self.d['offset'] = self.P.get('offset')
-        except:
-            self.P.E.write_error({'value':'jump detect: problem reading delay and offset PVs',"lvl":1})
-        if np.abs(self.terror) < 21.0:
-            self.buckets = 0
-            self.bucket_error = 0
-            return
-        t_trig = T.get_ns()
-        self.P.E.write_error({'value':'get motor pos',"lvl":2})
-        pc = M.get_position()
-        #pdb.set_trace()
-        
 
-        S = Sawtooth(pc, t_trig, self.d['delay'], self.d['offset'], 1/self.laser_f) # calculate time        
-        
-        # self.terror = t - S.t # error in ns
-        # self.terror = t-self.d['offset']
-        # self.terror = t-self.P.get('time')
-        # self.buckets = round(self.terror * self.locking_f)
-        self.buckets = np.mod(round(self.terror*self.laser_f*47),47)
-        # self.bucket_error = self.terror - self.buckets / self.locking_f
-        self.bucket_error = self.terror - self.buckets / (self.laser_f*47)
-        # self.exact_error = self.buckets / self.locking_f  # number of ns to move (exactly)
-        self.exact_error = self.buckets / (self.laser_f*47)
-        if (self.C.range > (2 * self.max_jump_error)) or (self.C.range == 0):  # too wide a range of measurements
-            self.buckets = 0  # do not count a bucket error if readings are not consistant
-            self.E.write_error({'value':u"counter not stable",'lvl':2})
-            return
-        # if abs(self.bucket_error) > self.max_jump_error:
-        #     self.buckets = 0
-        #     self.E.write_error({'value':u"not an integer number of buckets",'lvl':2})
-        if self.buckets != 0:
-            print('bucket jump - buckets, error')
-
-           # pdb.set_trace()
-            print('buckets')
-
-            print(self.buckets)
-            print(self.bucket_error)
-        self.E.write_error({'value':u"Laser OK",'lvl':2})
     
     def set_time(self):
         """ Basic move function. 
@@ -379,6 +325,62 @@ class LaserLocker(LaserLocker):
         # pdb.set_trace()
         M.wait_for_stop() # wait for motor to stop moving before exit
         self.P.put('busy', 0)
+
+    def check_jump(self):
+        """ Gen 2 implementation of bucket jump detection."""
+        self.P.E.write_error({'value':'jump detect',"lvl":2})
+        T = Trigger(self.P) # trigger class
+        self.P.E.write_error({'value':'setup phase motor',"lvl":2})
+        M = PhaseMotor(self.P) # phase motor
+        self.P.E.write_error({'value':'counter time',"lvl":2})  
+        t = self.C.get_time()
+        if t > -900000.0:      
+            self.P.put('error', t - self.P.get('time')) # timing error (reads counter)      
+        self.P.E.write_error({'value':'get trigger time',"lvl":2})
+        self.terror = t-self.P.get('time') # error between target time and readback time
+        try:
+            self.P.E.write_error({'value':'get delay and offset PVs',"lvl":2})
+            self.d['delay'] = self.P.get('delay')
+            self.d['offset'] = self.P.get('offset')
+        except:
+            self.P.E.write_error({'value':'jump detect: problem reading delay and offset PVs',"lvl":1})
+        if np.abs(self.terror) < 21.0:
+            self.buckets = 0
+            self.bucket_error = 0
+            return
+        t_trig = T.get_ns()
+        self.P.E.write_error({'value':'get motor pos',"lvl":2})
+        pc = M.get_position()
+        #pdb.set_trace()
+        
+
+        S = Sawtooth(pc, t_trig, self.d['delay'], self.d['offset'], 1/self.laser_f) # calculate time        
+        
+        # self.terror = t - S.t # error in ns
+        # self.terror = t-self.d['offset']
+        # self.terror = t-self.P.get('time')
+        # self.buckets = round(self.terror * self.locking_f)
+        self.buckets = np.mod(round(self.terror*self.laser_f*47),47)
+        # self.bucket_error = self.terror - self.buckets / self.locking_f
+        self.bucket_error = self.terror - self.buckets / (self.laser_f*47)
+        # self.exact_error = self.buckets / self.locking_f  # number of ns to move (exactly)
+        self.exact_error = self.buckets / (self.laser_f*47)
+        if (self.C.range > (2 * self.max_jump_error)) or (self.C.range == 0):  # too wide a range of measurements
+            self.buckets = 0  # do not count a bucket error if readings are not consistant
+            self.E.write_error({'value':u"counter not stable",'lvl':2})
+            return
+        # if abs(self.bucket_error) > self.max_jump_error:
+        #     self.buckets = 0
+        #     self.E.write_error({'value':u"not an integer number of buckets",'lvl':2})
+        if self.buckets != 0:
+            print('bucket jump - buckets, error')
+
+           # pdb.set_trace()
+            print('buckets')
+
+            print(self.buckets)
+            print(self.bucket_error)
+        self.E.write_error({'value':u"Laser OK",'lvl':2})
 
     def fix_jump(self):  # tries to fix the jumps 
         if self.buckets == 0:  #no jump to begin with
