@@ -58,6 +58,10 @@ def femto(config_fpath='NULL'):
         L = Gen2LaserLocker(P.E,P,W)
     else:
         L = Gen1LaserLocker(P.E,P,W)
+    if "find_beam_ctl" in P.config.config["add_config"]:
+        beamFind_enabled = True
+    else:
+        beamFind_enabled = False
     # L = locker(P,W) #set up locking system parameters
     L.locker_status()  # check locking sysetm / laser status
     P.E.write_error( {"value":L.message,"lvl":2})
@@ -78,7 +82,9 @@ def femto(config_fpath='NULL'):
                 P.put('ok', 0)
                 P.E.write_error({'value':'laser not ok, looping',"lvl":2})
                 time.sleep(0.5)  # to keep the loop from spinning too fast
-                continue            #just try again if the laser isn't ready  
+                continue            #just try again if the laser isn't ready
+            if beamFind_enabled:
+                L.findBeam()
             if P.get('calibrate'):
                 P.E.write_error({'value':'calib requested',"lvl":2})
                 P.put('ok', 0)

@@ -10,6 +10,7 @@ import time
 import math
 import pdb
 from collections import *
+from support.EventSystem import EventSystem
 
 def err(inputs,x,times,trig):
     """ Error function for fitting."""
@@ -199,6 +200,14 @@ class LaserLocker(LaserLocker):
         them.
         """
         #pdb.set_trace()
+        eventSystem = EventSystem()
+        accStatusCheck = eventSystem.validate()
+        if not accStatusCheck:
+            self.P.E.write_error({"value":'Calibration: Machine Invalid',"lvl":"2"})
+            self.P.put('find_beam_ctl',-1)
+            return
+        self.P.E.write_error({"value":'Calibration: Machine config valid; increasing TWID',"lvl":"2"})
+        T.set_width(1200)
         M = PhaseMotor(self.P)  # phase motor reference
         T = Trigger(self.P)  # trigger config reference
         ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
@@ -427,3 +436,34 @@ class LaserLocker(LaserLocker):
             elif outtime >= self.ppPeriod:
                 outtime -= self.ppPeriod
         return outtime
+
+    def findBeam(self):
+        """ Sweeps trigger parameters to locate a laser pulse in the event that
+        the oscillator phase has put the beam outside of the trigger width that
+        is other wise needed for operation. Much of the logic for determining
+        whether this function can proceed is duplicated in the calibration
+        routines, for reference. This applies, so far, only to Amplitude
+        Tangerines."""
+
+        beamFindState = self.P.get("find_beam_ctl")
+        T = Trigger(self.P)
+        if beamFindState == 0:
+            self.P.E.write_error({"value":'Beam Find Requested...',"lvl":"2"})
+            self.P.put("find_beam_ctl",1)
+            #Check logic conditions for whether proceeding is okay
+            eventSystem = EventSystem()
+            accStatusCheck = eventSystem.validate()
+            if not accStatusCheck:
+                self.P.E.write_error({"value":'Beam Find: Machine Invalid',"lvl":"2"})
+                self.P.put('find_beam_ctl',-1)
+                return
+            self.P.E.write_error({"value":'Beam Find: Machine config valid; increasing TWID',"lvl":"2"})
+            T.set_width(1200)
+        elif beamFindState == 1:
+            self.P.E.write_error({"value":'Restoring TWID...',"lvl":"2"})
+            self.P.put("find_beam_ctl",0)
+            T.set_width(400)
+        elif beamFindState == -1:
+            self.P.E.write_error({"value":'Clearing Beam Find error',"lvl":"2"})
+            self.P.put("find_beam_ctl",0)
+

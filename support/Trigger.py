@@ -19,3 +19,9 @@ class Trigger(object):
         self.time = t/self.scale
         #self.P.pvlist['laser_trigger'].put(self.time)
         self.P.put('laser_trigger', self.time)
+
+    def get_width(self):
+        return self.P.get('laser_trigger_width')
+
+    def set_width(self,wid):
+        self.P.put('laser_trigger_width', wid)

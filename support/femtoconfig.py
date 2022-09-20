@@ -169,6 +169,10 @@ class Config(object):
             pvvals.append(('diode_pwr',self.config["add_config"]["atca_base"]+'DIODE_PWR'))
             pvvals.append(('diode_pwr_lolo',self.config["add_config"]["atca_base"]+'DIODE_PWR.LOLO'))
             pvvals.append(('diode_pwr_hihi',self.config["add_config"]["atca_base"]+'DIODE_PWR.HIHI'))
+            if "laser_trigger_width" in self.config["add_config"]:
+                pvvals.append(("laser_trigger_width",self.config["add_config"]["laser_trigger_width"]))
+            if "find_beam_ctl" in self.config["add_config"]:
+                pvvals.append(("find_beam_ctl",self.config["add_config"]["find_beam_ctl"]))
         
         # self.error_pv = self.config["config"]["dev_base"]+"FS_STATUS"
         # self.error_pv = self.config["config"]["error_pv_name"]
