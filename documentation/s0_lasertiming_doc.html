@@ -354,7 +354,7 @@ code {
 
 </style>
 
-<!-- <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script> -->
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
   <script>
@@ -368,15 +368,14 @@ code {
 <h1 id="s0-laser-timing---in-brief">S0 Laser Timing - In-Brief</h1>
 <h2 id="commissioning-progressing---this-documentation-subject-to-change">[Commissioning Progressing - This documentation subject to change.]</h2>
 <p>Author: <strong>J.May</strong>
-Date: <strong>2022-04-04</strong></p>
+Date: 2022-04-04
+Updated: <strong>2022-09-20</strong></p>
 <hr>
-<p>To load the simple user overview panel for now (until panels are fully commissioned):</p>
-<pre class="hljs"><code><div>source $PACKAGE_TOP/anaconda/envs/python3.7env/bin/activate
-pydm laserTimingOverview.py ../fs-timing/configs/s0_amp_uv_1.json &amp;
-</div></code></pre>
-<p>This will load a panel that provides inputs in degrees to the laser timing control. This is designed to match what operations in ACR is familiar with on the NC systems. The configuration file loaded above provides the frequency used to convert, and should be set for gun, mdl, etc. as desired.</p>
-<p>The main panel, re-wired from the old Vitara Details panel, has mostly the same functionality as that system, however, the timing controls are currently coded directly to the phase control of the oscillator, and not the target time (the result of the oscillator phase and the laser triggers).</p>
-<p><a href="https://confluence.slac.stanford.edu/display/PCDS/Generation+1.5+Documentation)">For extended documentation on this system [under development]</a></p>
+<p>There are currently two primary panels accessible for accessing the rf locking and timing controls for the laser.</p>
+<p>The user panel will load a panel that provides inputs in degrees to the laser timing control. This is designed to match what operations in ACR is familiar with on the NC systems. The configuration file for the laser provides the frequency used to convert. The controls on this panel talk to the phase offset controls in the Script I/O panel accessible in the expert controls.</p>
+<p><img src="/documentation/rsc/S0_userpanel_tooltips.png" alt="userpanel with tooltips"></p>
+<p>The expert controls should be familiar to those used to LCLS-I. The panel presents the same information, and can be used in much the same way, though the route the data gets to the panel, from ATCA firmware registers and such, is different.</p>
+<p><a href="https://confluence.slac.stanford.edu/display/PCDS/Generation+1.5+Documentation">For extended documentation on this system [under development]</a>) and <a href="https://confluence.slac.stanford.edu/pages/viewpage.action?pageId=320476135">Hardware</a></p>
 
 </body>
 </html>

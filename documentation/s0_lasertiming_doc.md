@@ -2,18 +2,17 @@
 ## [Commissioning Progressing - This documentation subject to change.]
 
 Author: **J.May**
-Date: __2022-04-04__
+Date: 2022-04-04
+Updated: __2022-09-20__
 
 ----
 
-To load the simple user overview panel for now (until panels are fully commissioned):  
-```
-source $PACKAGE_TOP/anaconda/envs/python3.7env/bin/activate
-pydm laserTimingOverview.py ../fs-timing/configs/s0_amp_uv_1.json &
-```
+There are currently two primary panels accessible for accessing the rf locking and timing controls for the laser.
 
-This will load a panel that provides inputs in degrees to the laser timing control. This is designed to match what operations in ACR is familiar with on the NC systems. The configuration file loaded above provides the frequency used to convert, and should be set for gun, mdl, etc. as desired.
+The user panel will load a panel that provides inputs in degrees to the laser timing control. This is designed to match what operations in ACR is familiar with on the NC systems. The configuration file for the laser provides the frequency used to convert. The controls on this panel talk to the phase offset controls in the Script I/O panel accessible in the expert controls.
 
-The main panel, re-wired from the old Vitara Details panel, has mostly the same functionality as that system, however, the timing controls are currently coded directly to the phase control of the oscillator, and not the target time (the result of the oscillator phase and the laser triggers).
+![userpanel with tooltips](/documentation/rsc/S0_userpanel_tooltips.png)
 
-[For extended documentation on this system [under development]](https://confluence.slac.stanford.edu/display/PCDS/Generation+1.5+Documentation))
+The expert controls should be familiar to those used to LCLS-I. The panel presents the same information, and can be used in much the same way, though the route the data gets to the panel, from ATCA firmware registers and such, is different. 
+
+[For extended documentation on this system [under development]](https://confluence.slac.stanford.edu/display/PCDS/Generation+1.5+Documentation)) and [Hardware](https://confluence.slac.stanford.edu/pages/viewpage.action?pageId=320476135)
