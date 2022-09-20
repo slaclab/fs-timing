@@ -20,11 +20,19 @@ class PhaseMotor(object):
         # J.May (4/7/22): This isn't quite true, but we also don't get a phase readback, so I'm leaving this for now, even though one still needs a check against actual movement
         if self.P.config.is_atca: # ATCA shifts are instantaneous (~2 seconds maximum)
             #print('but i is atca')
+<<<<<<< Updated upstream
             # DUh! THis is not a readback, this won't do a thing.
             while self.position != self.prev_pos:
                 time.sleep(1.0) # fixed delay for ATCA time shifts
                 self.prev_pos = self.position
                 self.position = self.P.get('phase_motor') * self.scale
+=======
+            #while self.position != self.prev_pos:
+            #    time.sleep(1.0) # fixed delay for ATCA time shifts
+            #    self.prev_pos = self.position
+            #    self.position = self.P.get('phase_motor') * self.scale
+            time.sleep(0.2) # fixed delay for ATCA time shifts
+>>>>>>> Stashed changes
             return
         for n in range (0, self.max_tries):
             try:

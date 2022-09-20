@@ -44,6 +44,8 @@ class LaserLocker(LaserLocker):
         self.max_time = 20000.0 # maximum time that can be set (ns)
         self.locker_file_name = 'locker_data_' + self.P.name + '.pkl'
         self.timing_buffer = 0.0  # nanoseconds, how close to edge we can go in ns
+        T = Trigger(self.P)
+        self.initTPR = T.get_ns()
         self.d = dict()
         self.d['delay'] =  self.P.get('delay')
         self.d['offset'] = self.P.get('offset')
@@ -92,8 +94,6 @@ class LaserLocker(LaserLocker):
         status = status & self.laser_ok
         self.P.put('ok',status)
         return status
-
-
     
     def set_time(self):
         """ Basic move function. 
@@ -119,13 +119,14 @@ class LaserLocker(LaserLocker):
         #     t = t_low
         T = Trigger(self.P) # set up trigger
         M = PhaseMotor(self.P)
-        laser_t = t - self.d['delay']-self.d['offset']
-        nlaser = np.floor(laser_t) # chop off the nanoseconds first
+        laser_t = t - self.d['delay']-64.0
+        nlaser = np.floor(laser_t/1012.0) # chop off the nanoseconds first
         # nlaser = np.floor(laser_t * self.laser_f)
         # pc = (t - ((self.d['offset'])+self.d['delay'])/1000.0)*self.phasescale # ..what's left can be done with the oscillator phase
         # pc = ((t -
         # self.d['offset'])*1000.0-(t-self.d['offset']))/1000.0*self.phasescale
-        pc = self.wrapOscillator(t - self.d['offset']-self.d['delay'])/self.phasescale
+        pc = self.wrapOscillator(t - self.d['offset']-self.d['delay'])
+        pc = pc/self.phasescale
         # temporary fix
         # pc = 0.8299*pc+106559.0
         # wrap the phase around to minimize movement from arbitrary phase shifter home
@@ -139,7 +140,7 @@ class LaserLocker(LaserLocker):
         # pc = np.mod(pc, 1/self.laser_f)
         # ntrig = round((t - self.d['delay'] - (1/self.trigger_f)) * self.trigger_f) # paren was after laser_f
         #ntrig = round((t - self.d['delay'] - (0.5/self.laser_f)) * self.trigger_f) # paren was after laser_f
-        trig = nlaser / self.trigger_f
+        trig = self.initTPR + 1012.0* nlaser / self.trigger_f
         #pdb.set_trace()
         if self.P.config.use_drift_correction:
             dc = self.P.get('drift_correction_signal')*1.0e-6 # TODO need to convert this to a configuration/control parameter
@@ -190,8 +191,6 @@ class LaserLocker(LaserLocker):
             self.P.E.write_error({'value':"proposed phase: %f"%(pc),"lvl":2})
             print("proposed phase: %f"%(pc))
             M.move(pc) # moves the phase motor
-
-    
 
     def calibrate(self,report=True):
         """ Sweep fine resolution laser phase to detect the edges of pulse
@@ -322,9 +321,13 @@ class LaserLocker(LaserLocker):
         # np.savetxt("caldata.csv",np.stack((tctrl,tout),axis=-1),delimiter=',')
         self.P.put('calib_error', np.sqrt(calerr[idx]/ self.calib_points))
         # self.d['delay'] = delay
-        self.d['offset'] = offset[idx]
+        #self.d['offset'] = offset[idx]
+        self.d['delay'] = res.x[2]
+        self.P.put('delay',res.x[2])
         # self.P.put('delay', delay)
-        self.P.put('offset', offset[idx])
+        #self.P.put('offset', offset[idx])
+        self.d['offset'] = res.x[1]
+        self.P.put('offset', res.x[1])
         #print('PLOTTING CALIBRATION')
 
         #plot(tctrl, tout, 'bx', tctrl, S.r * S.t, 'r-') # plot to compare
@@ -417,7 +420,7 @@ class LaserLocker(LaserLocker):
         self.P.put('offset', new_offset)
         T = Trigger(self.P) # set up trigger
         t = T.get_ns()
-        laser_t = t - self.d['offset'] # - self.d['delay']
+        laser_t = t - self.d['offset'] - self.d['delay'] - 64.0
         T.set_ns(laser_t)
         self.P.E.write_error({"value":'Done Fixing Jump',"lvl":2})
         bc = self.P.get('bucket_counter') # previous number of jumps
@@ -437,6 +440,21 @@ class LaserLocker(LaserLocker):
                 outtime -= self.ppPeriod
         return outtime
 
+    def wrapOscillatorAndTrig(self,intime,intrig):
+        """ wrap oscillator phase and trigger time around max pulse picker rate to keep it from
+        moving very far distances. Protects against bad calculations and keeps
+        the response faster without increasing locker slew rate."""
+        outtime = intime
+        outtrig = intrig
+        while outtime < 0 or outtime >= self.ppPeriod:
+            if outtime < 0:
+                outtime +=  self.ppPeriod
+                outtrig -= self.ppPeriod
+            elif outtime >= self.ppPeriod:
+                outtime -= self.ppPeriod
+                outtrig =+ self.ppPeriod
+        return outtime,outtrig
+
     def findBeam(self):
         """ Sweeps trigger parameters to locate a laser pulse in the event that
         the oscillator phase has put the beam outside of the trigger width that
@@ -444,7 +462,6 @@ class LaserLocker(LaserLocker):
         whether this function can proceed is duplicated in the calibration
         routines, for reference. This applies, so far, only to Amplitude
         Tangerines."""
-
         beamFindState = self.P.get("find_beam_ctl")
         T = Trigger(self.P)
         if beamFindState == 0:
@@ -466,4 +483,3 @@ class LaserLocker(LaserLocker):
         elif beamFindState == -1:
             self.P.E.write_error({"value":'Clearing Beam Find error',"lvl":"2"})
             self.P.put("find_beam_ctl",0)
-

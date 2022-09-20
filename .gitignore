@@ -4,6 +4,7 @@ fsmanager_config.json
 startdev.bat
 /configs/*
 .vscode/
+\#*\#
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
