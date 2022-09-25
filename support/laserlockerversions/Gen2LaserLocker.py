@@ -464,7 +464,7 @@ class LaserLocker(LaserLocker):
         Tangerines."""
         beamFindState = self.P.get("find_beam_ctl")
         T = Trigger(self.P)
-        if beamFindState == 0:
+        if beamFindState == 1:
             self.P.E.write_error({"value":'Beam Find Requested...',"lvl":"2"})
             self.P.put("find_beam_ctl",1)
             #Check logic conditions for whether proceeding is okay
@@ -476,9 +476,9 @@ class LaserLocker(LaserLocker):
                 return
             self.P.E.write_error({"value":'Beam Find: Machine config valid; increasing TWID',"lvl":"2"})
             T.set_width(1200)
-        elif beamFindState == 1:
-            self.P.E.write_error({"value":'Restoring TWID...',"lvl":"2"})
-            self.P.put("find_beam_ctl",0)
+        elif beamFindState == 0:
+            #self.P.E.write_error({"value":'Restoring TWID...',"lvl":"2"})
+            #self.P.put("find_beam_ctl",0)
             T.set_width(400)
         elif beamFindState == -1:
             self.P.E.write_error({"value":'Clearing Beam Find error',"lvl":"2"})

@@ -32,6 +32,7 @@ from support.ErrorOutput import error_output
 from support.laserlockerversions.Gen1LaserLocker import LaserLocker as Gen1LaserLocker
 from support.laserlockerversions.Gen2LaserLocker import LaserLocker as Gen2LaserLocker
 from support.Trigger import Trigger
+import pdb
 
 def fitres(param, tin, tout):  # tin isinput time, tout is measured, param is parameters    
     sa,ca = param  # sine and cosine amplitudes
@@ -70,6 +71,7 @@ def femto(config_fpath='NULL'):
 #   C = time_interval_counter(P)  # time interval counter device
     D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
 #    C.get_time()
+    pdb.set_trace()
     while W.error ==0:   # MAIN PROGRAM LOOP
         time.sleep(0.2)
         try:   # the never give up, never surrunder loop. 
@@ -83,8 +85,8 @@ def femto(config_fpath='NULL'):
                 P.E.write_error({'value':'laser not ok, looping',"lvl":2})
                 time.sleep(0.5)  # to keep the loop from spinning too fast
                 continue            #just try again if the laser isn't ready
-            if beamFind_enabled:
-                L.findBeam()
+            #if beamFind_enabled:
+            #    L.findBeam()
             if P.get('calibrate'):
                 P.E.write_error({'value':'calib requested',"lvl":2})
                 P.put('ok', 0)
