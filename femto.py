@@ -71,7 +71,7 @@ def femto(config_fpath='NULL'):
 #   C = time_interval_counter(P)  # time interval counter device
     D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
 #    C.get_time()
-    pdb.set_trace()
+#    pdb.set_trace()
     while W.error ==0:   # MAIN PROGRAM LOOP
         time.sleep(0.2)
         try:   # the never give up, never surrunder loop. 

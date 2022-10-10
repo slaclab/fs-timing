@@ -357,7 +357,7 @@ class LaserLocker(LaserLocker):
         M = PhaseMotor(self.P)
         laser_tdes = targetTime - self.d['delay']-100.0 # might need to be + delay
         nlaser = np.floor(targetTime/self.ppPeriod) # chop off the nanoseconds first
-        pc = self.wrapOscillator(targetTime - self.d['delay'])
+        pc = self.wrapOscillator(targetTime - self.d['offset'])
         pc = pc/self.phasescale
         # trig = self.initTPR + 1012.0* nlaser / self.trigger_f
         #pdb.set_trace()
@@ -386,9 +386,9 @@ class LaserLocker(LaserLocker):
             self.P.put('find_beam_ctl',-1)
             return
         self.P.E.write_error({"value":'Calibration: Machine config valid; increasing TWID',"lvl":2})
-        T.set_width(1200)
         M = PhaseMotor(self.P)  # phase motor reference
         T = Trigger(self.P)  # trigger config reference
+        T.set_width(1200)
         ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
         self.P.put('busy', 1) # set busy flag
         tctrl = np.linspace(0, self.calib_range, self.calib_points) # control values to use
@@ -415,6 +415,7 @@ class LaserLocker(LaserLocker):
         self.P.put('delay', delay_val)
         self.d['offset'] = time_ZeroPhi_afterTrig
         self.P.put('offset', time_ZeroPhi_afterTrig)
+        T.set_width(400)
 
     def check_jump(self):
         """ Gen 2 implementation of bucket jump detection."""
