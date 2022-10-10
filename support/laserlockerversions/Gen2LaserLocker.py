@@ -26,16 +26,14 @@ class LaserLocker(LaserLocker):
         self.rmin = 196.0 # Divide ratio to 46.429 MHz - not really needed
         self.min_f = self.f0 / self.rmin  # 46.429 MHz
         self.laser_n = 7 
-        self.laser_f = self.min_f * self.laser_n / 47.0 # laser frequency
+        self.laser_f = self.min_f * self.laser_n / 50.0 # laser frequency
         self.ppPeriod = 1/self.laser_f # pulse picker period
         self.locking_n = self.rmin * 8.0 # locking number ratio to 8.5MHz
-        #self.locking_f = self.min_f * self.locking_n # 3.8GHz
         self.locking_f = self.laser_f
-        self.trigger_n = self.rmin / 4.0  # trigger frequency ratio
-        #self.trigger_f = self.min_f * self.trigger_n # 119Mhz trigger frequency
+        self.trigger_n = self.rmin / 4.0  # trigger frequency rati
         self.trigger_f = 1.0
-        self.calib_points = 200  # number of points to use in calibration cycle
-        self.calib_range = 2400  # nanoseconds for calibration sweep, 1.4x PulsePicker period
+        self.calib_points = 120  # number of points to use in calibration cycle
+        self.calib_range = 1200  # nanoseconds for calibration sweep, 1.4x PulsePicker period
         self.jump_tol = 0.150  # nanoseconds error to be considered a phase jump
         self.max_jump_error = 22.0 # nanoseconds too large to be a phase jump
         self.max_frequency_error = 100.0
@@ -53,7 +51,7 @@ class LaserLocker(LaserLocker):
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
         self.C = TimeIntervalCounter(self.P) # creates a time interval c
-        self.phasescale = 1.0981 # here until IOC edited
+        self.phasescale = 2856.0/2600.0 # here until IOC edited
 
     def locker_status(self):
         status = super().locker_status()
@@ -95,8 +93,8 @@ class LaserLocker(LaserLocker):
         self.P.put('ok',status)
         return status
     
-    def set_time(self):
-        """ Basic move function. 
+    def set_time_old(self):
+        """ Basic move function. Temporarily side-lined for testing a more concise approach.
         
         This function is the core move command for the laser locker, used by higher level functions.
         """
@@ -192,20 +190,21 @@ class LaserLocker(LaserLocker):
             print("proposed phase: %f"%(pc))
             M.move(pc) # moves the phase motor
 
-    def calibrate(self,report=True):
+    def calibrate_old(self,report=True):
         """ Sweep fine resolution laser phase to detect the edges of pulse
         picker periods. Some elements of this function are hold-overs from the
         first generation code to maintain some amount of consistency between
         them.
         """
+        # side-lined
         #pdb.set_trace()
         eventSystem = EventSystem()
         accStatusCheck = eventSystem.validate()
         if not accStatusCheck:
-            self.P.E.write_error({"value":'Calibration: Machine Invalid',"lvl":"2"})
+            self.P.E.write_error({"value":'Calibration: Machine Invalid',"lvl":2})
             self.P.put('find_beam_ctl',-1)
             return
-        self.P.E.write_error({"value":'Calibration: Machine config valid; increasing TWID',"lvl":"2"})
+        self.P.E.write_error({"value":'Calibration: Machine config valid; increasing TWID',"lvl":2})
         T.set_width(1200)
         M = PhaseMotor(self.P)  # phase motor reference
         T = Trigger(self.P)  # trigger config reference
@@ -338,6 +337,85 @@ class LaserLocker(LaserLocker):
         M.wait_for_stop() # wait for motor to stop moving before exit
         self.P.put('busy', 0)
 
+    def set_time(self):
+        """ Basic move function. 
+        
+        This function is the core move command for the laser locker, used by higher level functions.
+        """
+        #pdb.set_trace()
+        targetTime = self.P.get('time') # FS_TGT_TIME
+        if math.isnan(targetTime):
+            # A holdover from the matlab days, in for backwards compat.
+            self.P.E.write_error({"value":'desired time is NaN',"lvl":2})
+            return
+        if targetTime < self.min_time or targetTime > self.max_time:
+            self.P.E.write_error({"value":'need to move TIC trigger',"lvl":2})
+            return
+        t_high = self.P.get('time_hihi')
+        t_low = self.P.get('time_lolo')
+        T = Trigger(self.P) # set up trigger
+        M = PhaseMotor(self.P)
+        laser_tdes = targetTime - self.d['delay']-100.0 # might need to be + delay
+        nlaser = np.floor(targetTime/self.ppPeriod) # chop off the nanoseconds first
+        pc = self.wrapOscillator(targetTime - self.d['delay'])
+        pc = pc/self.phasescale
+        # trig = self.initTPR + 1012.0* nlaser / self.trigger_f
+        #pdb.set_trace()
+      
+        if self.P.get('enable_trig'): # Full routine when trigger can move
+            T.set_ns(laser_tdes)
+            self.P.E.write_error({'value':"moving Trigger: %f"%(laser_tdes),"lvl":2})
+
+        pc_diff = M.get_position() - pc  # difference between current phase motor and desired time        
+        if abs(pc_diff) > 1e-9:
+            self.P.E.write_error({'value':"proposed phase: %f"%(pc),"lvl":2})
+            print("proposed phase: %f"%(pc))
+            M.move(pc) # moves the phase motor
+
+    def calibrate(self,report=True):
+        """ Sweep fine resolution laser phase to detect the edges of pulse
+        picker periods. Some elements of this function are hold-overs from the
+        first generation code to maintain some amount of consistency between
+        them.
+        """
+        #pdb.set_trace()
+        eventSystem = EventSystem()
+        accStatusCheck = eventSystem.validate()
+        if not accStatusCheck:
+            self.P.E.write_error({"value":'Calibration: Machine Invalid',"lvl":2})
+            self.P.put('find_beam_ctl',-1)
+            return
+        self.P.E.write_error({"value":'Calibration: Machine config valid; increasing TWID',"lvl":2})
+        T.set_width(1200)
+        M = PhaseMotor(self.P)  # phase motor reference
+        T = Trigger(self.P)  # trigger config reference
+        ns = 10000 # number of different times to try for fit - INEFFICIENT - should do Newton's method but too lazy
+        self.P.put('busy', 1) # set busy flag
+        tctrl = np.linspace(0, self.calib_range, self.calib_points) # control values to use
+        tout = np.array([]) # array to hold measured time data
+        counter_good = np.array([]) # array to hold array of errors
+        t_trig = T.get_ns() # trigger time in nanoseconds
+        M.move(0)  # 1. move to zero to start 
+        stability_wait = deque([],4)
+        stability_wait.append(self.C.get_time())
+        time.sleep(2.0)
+        stable_pass = False
+        while not stable_pass:
+            t_check = self.C.get_time()
+            stab_mean = np.average(stability_wait) # boxcar average by virtue of deque
+            if (stab_mean -t_check)/stab_mean <= 0.05: # hand-wave value for now
+                stable_pass = True
+            stability_wait.append(t_check)
+            time.sleep(2.0)
+        M.wait_for_stop()
+        time_ZeroPhi_afterTrig = self.C.get_time()
+        delay_val = time_ZeroPhi_afterTrig - T.get_ns()
+        # pdb.set_trace()
+        self.d['delay'] = delay_val
+        self.P.put('delay', delay_val)
+        self.d['offset'] = time_ZeroPhi_afterTrig
+        self.P.put('offset', time_ZeroPhi_afterTrig)
+
     def check_jump(self):
         """ Gen 2 implementation of bucket jump detection."""
         self.P.E.write_error({'value':'jump detect',"lvl":2})
@@ -396,7 +474,7 @@ class LaserLocker(LaserLocker):
 
     def fix_jump(self):  # tries to fix the jumps 
         if self.buckets == 0:  #no jump to begin with
-            self.P.E.write_error({"value":'trying to fix non-existant jump',"lvl":"2"})
+            self.P.E.write_error({"value":'trying to fix non-existant jump',"lvl":2})
             return
         # if abs(self.bucket_error) > self.max_jump_error:
         #     self.P.E.write_error( 'non-integer bucket error, cant fix')
@@ -465,21 +543,21 @@ class LaserLocker(LaserLocker):
         beamFindState = self.P.get("find_beam_ctl")
         T = Trigger(self.P)
         if beamFindState == 1:
-            self.P.E.write_error({"value":'Beam Find Requested...',"lvl":"2"})
+            self.P.E.write_error({"value":'Beam Find Requested...',"lvl":2})
             self.P.put("find_beam_ctl",1)
             #Check logic conditions for whether proceeding is okay
             eventSystem = EventSystem()
             accStatusCheck = eventSystem.validate()
             if not accStatusCheck:
-                self.P.E.write_error({"value":'Beam Find: Machine Invalid',"lvl":"2"})
+                self.P.E.write_error({"value":'Beam Find: Machine Invalid',"lvl":2})
                 self.P.put('find_beam_ctl',-1)
                 return
-            self.P.E.write_error({"value":'Beam Find: Machine config valid; increasing TWID',"lvl":"2"})
+            self.P.E.write_error({"value":'Beam Find: Machine config valid; increasing TWID',"lvl":2})
             T.set_width(1200)
-        elif beamFindState == 0:
-            #self.P.E.write_error({"value":'Restoring TWID...',"lvl":"2"})
-            #self.P.put("find_beam_ctl",0)
+        elif beamFindState == 2:
+            self.P.E.write_error({"value":'Restoring TWID...',"lvl":2})
+            self.P.put("find_beam_ctl",0)
             T.set_width(400)
         elif beamFindState == -1:
-            self.P.E.write_error({"value":'Clearing Beam Find error',"lvl":"2"})
+            self.P.E.write_error({"value":'Clearing Beam Find error',"lvl":2})
             self.P.put("find_beam_ctl",0)
