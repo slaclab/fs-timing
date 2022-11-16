@@ -28,5 +28,6 @@
         "use_combined_counter" : false
     },
     "add_config" : {
+        "tic_type" : "keysight"
     }
 }
