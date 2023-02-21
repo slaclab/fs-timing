@@ -1,22 +1,23 @@
 {
     "config_meta" : {
         "author" : "Justin May",
-        "author_date" : "2021-04-07",
-        "desc" : "This is a reference template configuration file for use with femto.py v1.1"
+        "author_date" : "2022-12-01",
+        "desc" : "Configuration file for the LCLS-II S0 laser heater (Amplitude Tangerine)"
     },
     "config" : {
-        "name" : "replace with system identifier",
-        "genpv_base" : "forms the initial pv base string",
-        "dev_base" : "in case this is different from base",
-        "matlab_pv_base" : "again, change this if different; commonly dev_base + 'matlab'",
+        "name" : "Sector 0 LH1",
+	"type" : "ATCA",
+        "genpv_base" : "OSC:LHTR:100:",
+        "dev_base" : "OSC:LHTR:100:",
+        "matlab_pv_base" : "OSC:LHTR:100:matlab:",
         "matlab_pv_offsets" : 1,
         "matlab_pv_digits" : 2,
-        "counter_base" : "replace with pv string base for time interval counter",
-        "freq_counter" : "replace with pv string base for frequency counter",
-        "phase_motor" : "replace with pv string base for phase controller",
-        "error_pv_name" : "pv name to report error status",
-        "version_pv_name" : "pv name for version of code",
-        "laser_trigger" : "pv string for the laser trigger",
+        "counter_base" : "OSC:LHTR:100:",
+        "freq_counter" : "OSC:LHTR:100:",
+        "phase_motor" : "OSC:LHTR:100:PHASE_SWEEP",
+        "error_pv_name" : "OSC:LHTR:100:FS_STATUS",
+        "version_pv_name" : "2.0.0",
+        "laser_trigger" : "TPR:LGUN:TS01:0:TRG07_SYS2_TDES",
         "trig_in_ticks" : false,
         "reverse_counter" : 1,
         "use_secondary_calibration" : false,
@@ -26,14 +27,8 @@
         "use_combined_counter" : false
     },
     "add_config" : {
-        "feedback_delay" : 0.1, 
-        "tt_pvname" : "DEV:TIMETOOL:TTALL",
-        "fb_matlab_start" : 20,
-        "fb_matlab_prefix" : "DEV:VIT:matlab:",
-        "tt_stagename" : "DEV:DELAYSTAGE",
-        "tt_ipmname" : "DEV:PULSEENERGY",
-        "tt_pixscale" : 2.0e-6,
-        "pcavset" : "SXR",
-        "secondary_calibration" : "replace with pv for value"
+        "atca_base" : "OSC:LHTR:100:",
+	"deg_conversion_freq" : 0.185714,
+	"laser_trigger_width" : "TPR:LGUN:TS01:0:TRG07_SYS2_TWID"
     }
 }
