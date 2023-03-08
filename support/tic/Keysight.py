@@ -5,7 +5,7 @@ class Keysight(TimeIntervalCounter):
     """ Instance of the time interval counter object that supports the 53220 and 53230 models from Keysight, which do not have measurement statistics functions."""
 	
     def __init__(self, P):
-	    """ Specific initialization that uses internal deque (ring) to calculate jitter."""
+        """ Specific initialization that uses internal deque (ring) to calculate jitter."""
         self.scale = 1e9 # scale relative to nanoseconds
         self.P = P
         self.good = 1 

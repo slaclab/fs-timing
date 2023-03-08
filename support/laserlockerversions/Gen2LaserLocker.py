@@ -1,5 +1,5 @@
 from support.laserlockerversions.LaserLocker import LaserLocker
-from ..TimeIntervalCounter import TimeIntervalCounter
+from ..tic.TimeIntervalCounter import TimeIntervalCounter
 from ..Trigger import Trigger
 from ..PhaseMotor import PhaseMotor
 from ..Sawtooth import Sawtooth

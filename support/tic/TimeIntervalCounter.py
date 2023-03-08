@@ -1,4 +1,4 @@
-from .Ring import Ring as ring
+from ..Ring import Ring as ring
 
 class TimeIntervalCounter(object):
     """The Time Interval Counter class reads interval counter data, gets raw or

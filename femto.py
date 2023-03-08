@@ -24,7 +24,7 @@ from scipy.optimize import leastsq # for secondary calibration
 from support import watchdog3 as watchdog
 from support.femtoconfig import Config
 # import support.tic.TimeIntervalCounter
-import support.tic.Keysight as TimeIntervalCounter
+# import support.tic.Keysight as TimeIntervalCounter
 import support.PhaseMotor
 from support.PVS import PVS
 from support.ErrorOutput import error_output
@@ -70,7 +70,10 @@ def femto(config_fpath='NULL'):
     T = Trigger(P)
     T.get_ns()
 #   C = time_interval_counter(P)  # time interval counter device
-    D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
+    if "deg_conversion_freq" in P.config.config["add_config"]:
+        D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
+    else:
+        D = degrees_s(P,2856.0)
 #    C.get_time()
 #    pdb.set_trace()
     while W.error ==0:   # MAIN PROGRAM LOOP

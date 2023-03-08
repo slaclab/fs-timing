@@ -1,4 +1,5 @@
-from ..TimeIntervalCounter import TimeIntervalCounter
+from ..tic.TimeIntervalCounter import TimeIntervalCounter
+from ..tic.Keysight import Keysight
 
 class LaserLocker(object):
     """Generalized LaserLocker class. Hardware-specific implementations inherit

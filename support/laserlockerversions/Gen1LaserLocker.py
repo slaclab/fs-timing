@@ -1,5 +1,6 @@
 from support.laserlockerversions.LaserLocker import LaserLocker
-from ..TimeIntervalCounter import TimeIntervalCounter
+from ..tic.TimeIntervalCounter import TimeIntervalCounter
+from ..tic.Keysight import Keysight
 from ..Trigger import Trigger
 from ..PhaseMotor import PhaseMotor
 from ..Sawtooth import Sawtooth
@@ -36,7 +37,11 @@ class LaserLocker(LaserLocker):
         self.delay_offset = 0  # kludge to avoide running near sawtooth edge
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
-        self.C = TimeIntervalCounter(self.P) # creates a time interval counter object
+        if "tic_type" in self.P.config.config:
+            if self.P.config.config["tic_type"] == "keysight":
+                self.C = Keysight(self.P)
+        else:
+            self.C = TimeIntervalCounter(self.P) # creates a time interval counter object
         
     def locker_status(self):
         status = super().locker_status()
