@@ -1,7 +1,9 @@
-from .TimeIntervalCounter import TimeIntervalCounter
+#from .TimeIntervalCounter import TimeIntervalCounter
 import numpy as np
+import pdb
+from ..Ring import Ring as ring
 
-class Keysight(TimeIntervalCounter):
+class Keysight(object):
     """ Instance of the time interval counter object that supports the 53220 and 53230 models from Keysight, which do not have measurement statistics functions."""
 	
     def __init__(self, P):
@@ -17,22 +19,24 @@ class Keysight(TimeIntervalCounter):
         
     def get_time(self):
         """ return time from counter."""
+        #pdb.set_trace()
         self.good = 0  # assume bad unless we fall through all the traps
         self.range = 0; # until we overwrite
-        tol = self.P.get('counter_jitter_high')
+        #tol = self.P.get('counter_jitter_high')
+        tol = 50000
         tmin = self.P.get('counter_low')
         tmax = self.P.get('counter_high')
         time = self.P.get('counter')  # read counter time
         self.update_jitter()
-        if time == self.rt.get_last_element: # no new data
+        if time == self.rt.get_last_element(): # no new data
             return 0 # no new data
         if (time > tmax) or (time < tmin):
             return 0 # data out of range
-        if self.rj[-1] > tol:
+        if self.rj.get_last_element() > tol:
             return 0  # jitter too high
         # if we got here, we have a good reading
         self.rt.add_element(time) # add time to ring
-        self.rj.add_element(jit)  # add jitter to ring
+        #self.rj.add_element(jit)  # add jitter to ring
         self.good = 1
         if self.rt.full:
             self.range = self.scale * (max(self.rt.get_array()) - min(self.rt.get_array()))  # range of measurements
@@ -42,4 +46,5 @@ class Keysight(TimeIntervalCounter):
         
     def update_jitter(self):
         """ Function to update the jitter in the measurements based just on the standard deviation of the buffer."""
-        self.rj.add_element(np.std(self.rt))
+        #pdb.set_trace()
+        self.rj.add_element(np.std(self.rt.get_array()))

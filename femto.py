@@ -73,7 +73,7 @@ def femto(config_fpath='NULL'):
     if "deg_conversion_freq" in P.config.config["add_config"]:
         D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
     else:
-        D = degrees_s(P,2856.0)
+        D = degrees_s(P,2.856)
 #    C.get_time()
 #    pdb.set_trace()
     while W.error ==0:   # MAIN PROGRAM LOOP

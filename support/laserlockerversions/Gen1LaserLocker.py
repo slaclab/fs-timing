@@ -7,6 +7,7 @@ from ..Sawtooth import Sawtooth
 import numpy as np
 import time
 import math
+import pdb
 
 class LaserLocker(LaserLocker):
     """Gen 1 Laser locker object, inheriting from generalized LaserLocker object."""
@@ -37,8 +38,8 @@ class LaserLocker(LaserLocker):
         self.delay_offset = 0  # kludge to avoide running near sawtooth edge
         self.drift_last= 0; # used for drift correction when activated
         self.drift_initialized = False # will be true after first cycle
-        if "tic_type" in self.P.config.config:
-            if self.P.config.config["tic_type"] == "keysight":
+        if "tic_type" in self.P.config.config["add_config"]:
+            if self.P.config.config["add_config"]["tic_type"] == "keysight":
                 self.C = Keysight(self.P)
         else:
             self.C = TimeIntervalCounter(self.P) # creates a time interval counter object
@@ -236,7 +237,7 @@ class LaserLocker(LaserLocker):
             M.wait_for_stop()
             print('sleep')
 
-            time.sleep(0.2)  #Don't know why this is needed
+            time.sleep(1.0)  #Don't know why this is needed
             t_tmp = 0 # to check if we ever get a good reading
             print('get read')
 
@@ -249,11 +250,12 @@ class LaserLocker(LaserLocker):
 
             print(t_tmp)
             print(self.C.good)
+            #pdb.set_trace()
             counter_good = np.append(counter_good, self.C.good) # will use to filter data
             if not self.C.good:
                 print('bad counter data')
 
-                self.P.E.write_error('timer error, bad data - continuing to calibrate' ) # just for testing
+                self.E.write_error({'value':'timer error, bad data - continuing to calibrate','lvl':2} ) # just for testing
         M.move(tctrl[0])  # return to original position    
         minv = min(tout[np.nonzero(counter_good)])+ self.delay_offset
 

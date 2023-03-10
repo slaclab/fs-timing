@@ -22,14 +22,14 @@ class degrees_s():
         ns_offset = self.P.get('ns_offset')
         deg_offset = self.P.get('deg_offset')
         if ns != self.last_time or ns_offset != self.last_ns_offset: # nanoseconds have changed
-            deg_new = (ns - ns_offset) * self.freq * 360 - deg_offset
+            deg_new = -1.0*(ns - ns_offset) * self.freq * 360 - deg_offset
             self.last_time = ns
             self.last_ns_offset = ns_offset
             self.last_deg = deg_new
             self.P.put('deg_Sband', deg_new) #write the degrees back
            
         elif deg != self.last_deg or deg_offset != self.last_deg_offset:  #changed degrees
-            ns_new = (deg + deg_offset)/(self.freq * 360) + ns_offset
+            ns_new = -1.0*(deg + deg_offset)/(self.freq * 360) + ns_offset
             self.last_time = ns_new
             self.last_deg = deg
             self.last_deg_offset = deg_offset
