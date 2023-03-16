@@ -17,14 +17,13 @@
         "phase_motor" : "OSC:LA20:10:M1_MOTR_IQ",
         "error_pv_name" : "OSC:LA20:10:FS_STATUS",
         "version_pv_name" : "OSC:LA20:10:FS_WATCHDOG.DESC",
-        "laser_trigger" : "MKB:SYS1:1:VAL",
+        "laser_trigger" : "TRIG:LA20:LS27:TDES",
         "trig_in_ticks" : false,
         "reverse_counter" : 1,
         "use_secondary_calibration" : false,
         "use_drift_correction" : false,
         "use_dither" : false,
         "timeout" : 1.0,
-        "TIC_type" : "53230",
         "use_combined_counter" : false
     },
     "add_config" : {
