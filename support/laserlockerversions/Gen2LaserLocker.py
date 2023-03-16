@@ -397,13 +397,15 @@ class LaserLocker(LaserLocker):
         t_trig = T.get_ns() # trigger time in nanoseconds
         M.move(0)  # 1. move to zero to start 
         stability_wait = deque([],4)
+        print(self.C.get_time())
         stability_wait.append(self.C.get_time())
         time.sleep(2.0)
         stable_pass = False
         while not stable_pass:
             t_check = self.C.get_time()
             stab_mean = np.average(stability_wait) # boxcar average by virtue of deque
-            if (stab_mean -t_check)/stab_mean <= 0.05: # hand-wave value for now
+            print("%f,%f"%(stab_mean,stability_wait[0]))
+            if (stab_mean -t_check)/stab_mean <= 0.1: # hand-wave value for now
                 stable_pass = True
             stability_wait.append(t_check)
             time.sleep(2.0)
