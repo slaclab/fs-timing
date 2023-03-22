@@ -3,6 +3,7 @@ fsgui_config_flat.json
 fsmanager_config.json
 startdev.bat
 /configs/*
+!/configs/README.md
 .vscode/
 \#*\#
 
