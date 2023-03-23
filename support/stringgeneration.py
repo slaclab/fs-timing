@@ -1,3 +1,5 @@
+""" This is a small script used in generating test cases for verifying the configurations for systems."""
+
 import re
 # from Tkinter import Tk
 

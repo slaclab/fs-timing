@@ -1,14 +1,35 @@
+""" Implementation of a configuration file system for laser lockers. Prior to
+this, configuration of pvs and settings for lockers was hard-coded. For more
+information on this system, see documentation in the configs and templates
+section of this repo.
+
+Justin May
+"""
+
 import os
 import pathlib
 import json
 import re
+
 from epics import PV as Pv
 
 class Config(object):
     """The base config class encapsulates the logic for reading and validating
     a configuration file. It is written around the configuration design
-    described in 'femto_config.json description.md' and 'template_femto_config.json'."""
+    described in 'femto_config.json description.md' and 'template_femto_config.json'.
+    """
+
     def __init__(self):
+        """ Construct a Config object with dictionaries and strings
+        
+        Init's a Config object which is backwards compatible with early femto.py
+        structures.
+        
+        Contents:
+        self.config -- source configuration data 
+        self.pvlist -- constructed pv list from configuration
+        """
+
         self.config = {}
         self.version = ""
         self.name = ""
@@ -16,8 +37,11 @@ class Config(object):
         pass
 
     def readConfig(self,filename):
-        """Reads in a configuration file. Returns a python dictionary. Written for
-        potential future overload."""
+        """Reads in a configuration file.
+        
+        Returns a python dictionary. Written for potential future overload.
+        """
+
         # Validate path
         if not os.path.exists(filename):
             print("Configuration filename: %s does not exist."%(filename))
@@ -29,8 +53,12 @@ class Config(object):
             return
 
     def readJsonConfig(self,filename):
-        """Reads in a json configuration file. Returns a python dictionary.
-        Written to go with 'template_femto_config.json'."""
+        """Reads in a json configuration file. 
+        
+        Returns a python dictionary.
+        Written to go with 'template_femto_config.json'.
+        """
+
         with open(filename) as fp:
             self.config = json.load(fp)
 
@@ -42,14 +70,21 @@ class Config(object):
 
 
     def validateConfigSyntax(self):
-        """Performs a simple validation of the configuration file syntax. Looks
-        for missing sections, invalid formatting, invalid characters."""
+        """Perform a simple validation of the configuration file syntax. 
+        
+        Looks for missing sections, invalid formatting, invalid characters.
+        As of 2023-03-23, functionality has been stripped out.
+        """
+
         return True
 
     def validateCorePVs(self):
-        """Validates the configuration stored in the object. Note, this includes
-        validating all of the PVs. In other words, this will fail if you don't
-        have a running IOC instance yet."""
+        """Validates the configuration stored in the object.
+        
+        Note, this includes validating all of the PVs. In other words, this 
+        will fail if you don't have a running IOC instance yet.
+        """
+
         err = False
         # Iterate through the config PVs, testing whether each generates a valid
         # connection point. Also expand and test the prefixed pattern PVs.
@@ -70,16 +105,33 @@ class Config(object):
             self.config["config_meta"]["config_valid"] = True
 
     def printAllPVs(self):
-        """Utility function that outputs a list of all defined and derived PVs
-        generated from the configuration."""
+        """ Print all PVs in a configuration.
+        
+        Utility function that outputs a list of all defined and derived PVs
+        generated from the configuration.
+        
+        Not implemented yet.
+        """
+
         pvvals = []
         pass
 
     def expandPVs(self):
-        """Utility function that generates an expanded PV list from a 
+        """ Expand configuration to PV assigments.
+        
+        Utility function that generates an expanded PV list from a
         configuration. It will not generate pv expansions for pvs that are
         defined but not enabled in the configuration. As such, this function
-        includes program logic as part of its function."""
+        includes program logic as part of its function.
+        
+        The PVs defined here match the structure of the original IOC and
+        femto.py design. They are by default backwards compatible. As a result,
+        any modification to the IOC structure will require retest and validation
+        of the configuration objects.
+
+        Expanded descriptions of these fields are available in system documentation.
+        """
+
         pvvals = []
         pvvals.append(("freq_counter",self.config["config"]["freq_counter"]))
         pvvals.append(("phase_motor",self.config["config"]["phase_motor"]))
@@ -106,11 +158,8 @@ class Config(object):
         pvvals.append(("ns_offset",self.config["config"]["dev_base"]+"FS_NS_OFFSET"))
         pvvals.append(("offset",self.config["config"]["dev_base"]+"FS_TIMING_OFFSET"))
         pvvals.append(("ok",self.config["config"]["dev_base"]+"FS_LASER_OK"))
-        #pvvals.append(("time_hihi",self.config["config"]["dev_base"]+"FS_TGT_TIME.HIHI"))
         pvvals.append(("counter_jitter",self.config["config"]["dev_base"]+"GetMeasJitter"))
         pvvals.append(("counter_jitter_high",self.config["config"]["dev_base"]+"GetMeasJitter.HIGH"))
-        #pvvals.append(("freq_counter",self.config["config"]["dev_base"]+""))
-        #pvvals.append(("",self.config["config"]["dev_base"]+""))
         pvvals.append(("phase_motor_rb",self.config["config"]["phase_motor"]+".RBV"))
         pvvals.append(("phase_motor_dmov",self.config["config"]["phase_motor"]+".DMOV"))
         pvvals.append(("freq_sp",self.config["config"]["dev_base"]+"FREQ_SP"))
@@ -121,7 +170,6 @@ class Config(object):
         pvvals.append(("diode_pwr",self.config["config"]["dev_base"]+"CH1_DIODE_PWR"))
         pvvals.append(("diode_pwr_lolo",self.config["config"]["dev_base"]+"CH1_DIODE_PWR.LOLO"))
         pvvals.append(("diode_pwr_hihi",self.config["config"]["dev_base"]+"CH1_DIODE_PWR.HIHI"))
-        #pvvals.append(("laser_trigger",self.config["config"]["dev_base"]+""))
         pvvals.append(("laser_locked",self.config["config"]["dev_base"]+"PHASE_LOCKED"))
         pvvals.append(("lock_enable",self.config["config"]["dev_base"]+"RF_LOCK_ENABLE"))
         pvvals.append(("unfixed_error",self.config["config"]["dev_base"]+"FS_UNFIXED_ERROR"))
@@ -174,10 +222,6 @@ class Config(object):
             if "find_beam_ctl" in self.config["add_config"]:
                 pvvals.append(("find_beam_ctl",self.config["add_config"]["find_beam_ctl"]))
         
-        # self.error_pv = self.config["config"]["dev_base"]+"FS_STATUS"
-        # self.error_pv = self.config["config"]["error_pv_name"]
-        # pvvals.append(("error_pv",self.error_pv))
-        # pvvals.append(("error_pv_name",self.config["config"]["dev_base"]+"FS_STATUS"))
         self.matlab_pv_digits = self.config["config"]["matlab_pv_digits"]
         self.reverse_counter = self.config["config"]["reverse_counter"]
         self.timeout = self.config["config"]["timeout"]
@@ -188,18 +232,19 @@ class Config(object):
         self.version_pv_name = self.config["config"]["version_pv_name"]
         self.version_pv = Pv(self.config["config"]["version_pv_name"])
         self.error_pv = Pv(self.config["config"]["error_pv_name"])
-        # pvvals.append(("version_pv",self.version_pv_name))
         pvvals.append(("phase_motor_dmov",self.config["config"]["phase_motor"]+".DMOV"))
 
-        # self.pvlist = pvvals
         for entry in pvvals:
             self.pvlist[entry[0]]=Pv(entry[1])
-        # print(self.pvlist)     
 
     def printDefs(self):
-        """Utility function that outputs a list of all functional
+        """ Print the contents of a configuration by data type.
+        
+        Utility function that outputs a list of all functional
         definitions. These do not include PVs. This is based on scanning, not
-        what is defined in code."""
+        what is defined in code.
+        """
+
         boolvals = "Boolean Values\n"
         floatvals = "Float Values\n"
         intvals = "Integer Values\n"
@@ -238,13 +283,19 @@ class Config(object):
         print(stringvals)
 
     def validateExtraConfig(self):
-        """Performs a validation on the additional parameters provided in the
+        """ Validate configuration for additional parameters.
+        
+        Performs a validation on the additional parameters provided in the
         configuration file. Will not result in a validation failure, but will
-        indicate if parameters are not accessible."""
+        indicate if parameters are not accessible.
+        
+        Not yet implemented.
+        """
+
         pass
 
     def generateConfig(path,self):
-        """This utility function will generate an empty configuration file."""
+        """Generate an empty configuration file."""
         # Not yet implemented
         pass
 

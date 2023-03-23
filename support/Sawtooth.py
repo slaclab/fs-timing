@@ -1,26 +1,35 @@
 import time
 import math
-import numpy as np
-# from pylab import *
-# import watchdog
-# from psp.Pv import Pv
 import sys
-# import random  # random number generator for secondary calibration
-# from scipy.optimize import leastsq # for secondary calibration
+
+import numpy as np
 
 class Sawtooth(object):
-    """Utility function for initializing and working with a sawtooth function as
+    """ A description of a sawtooth function.
+    
+    Utility function for initializing and working with a sawtooth function as
     part of the calibration logic for the laser locker. Generates a sawtooth
     waveform and a vector of OK / notok points for where the fit should be
-    good. Separated from monolithic OG code."""
+    good. Separated from monolithic OG code.
+    
+    """
     
     def __init__(self, t0, t_trig, delay, offset, period):
-        """ 
-        t0 is an array of inputs that represent the phase shift time
-        t_trig is the EVR trigger time
-        delay is the cable length after the trigger
-        offset is the dealay from the photodiode to the time interval counter
+        """ Generate sawtooth.
+
+        Generates a sawtooth based on and used with the Gen 1 (SIM-based)
+        calibration procedure used on Vitara and similar lasers. In general
+        unit-less, values here are typically in ns. If you work through the
+        math, you'll see this does make a sawtooth, but it's a bit of a
+        roundabout way to do it as opposed to say, using Scipy.signals
+
+        Arguments: 
+        t0 -- an array of inputs that represent the phase shift time
+        t_trig -- the EVR trigger time
+        delay -- the cable length after the trigger 
+        offset -- the delay from the photodiode to the time interval counter
         """
+        
         trig_out = t_trig + delay
         laser_t0 = t0 + offset
         tx = trig_out - laser_t0

@@ -1,4 +1,3 @@
-#watchdog.py
 """ Watchdog.py modified for python 3 compatibility.
 
 This is a convenience function implementing a watchdog timer with indirect loop
@@ -7,13 +6,26 @@ codebase. This tool is not currently asynchronous.
 
 Dependencies:
 - pyepics
+
+Justin May
 """
 
 import time  #includes sleep command to wait for other users
+
 import epics
 
 class watchdog():
-    def __init__(self, pv):  # pv is an already connected pv
+    """ Watchdog object to monitor code execution."""
+    def __init__(self, pv):
+        """ Set up watchdog object with already configured pvs.
+        
+        This object checks for various error states/control states upon init
+        that imply certain control system states.
+        
+        Arguments:
+        pv -- a direct link to a watchdog PV
+        """
+
         self.pv = pv
         self.counter = 0;
         try:
@@ -41,6 +53,15 @@ class watchdog():
         self.error = 0  # OK to continue
 
     def check(self):  # check watchdog timer
+        """ Check status of watchdog and act on special states.
+        
+        This function will check for various conditions, in particular whether
+        the watchdog is jumping values or whether the value of the PV has
+        externally been set to an error state. Note, a PV value of 0, the
+        control state for requesting a graceful termination of the process, is
+        handled externally in femto.py.
+        """
+        
         try:
             self.pv.get(timeout=1.0)
         except:

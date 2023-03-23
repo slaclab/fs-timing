@@ -1,10 +1,18 @@
 from epics.pv import PV as Pv
 
 class EventSystem(object):
-    """ The EventSystem class is a utility class that provides a series of
-    functions to validate the configuration of the LCLS-II event system, for use
-    prior to significant adjustments to the event system triggers controlling
-    the injector lasers."""
+    """ Validator object for the state of the LCLS-II event system.
+    
+    The EventSystem class is a utility class that provides a series of functions
+    to validate the configuration of the LCLS-II event system, for use prior to
+    significant adjustments to the event system triggers controlling the
+    injector lasers. As of 2023-03-23, we are not in a mode where high rate
+    delivery is normal, and so verifying the delivery rate prior to calibrations
+    and using the beam finder functionality is left to operators. As such, this
+    class is not currently used.
+
+    Justin May
+    """
     
     def __init__(self):
         pass

@@ -1,13 +1,18 @@
-#femto.py  program to control laser femtosecond timing
+"""femto.py  program to control laser femtosecond timing
 
 # major version rework through 2021-07-21 - JM 
 # -- see version control history and Readme for major changes
 # This library has been python3'd
-
+"""
 
 import time
 import math
+import sys
+import random  # random number generator for secondary calibration
+import pdb
+
 import numpy
+from scipy.optimize import leastsq # for secondary calibration
 # from pylab import *
 # try:
 #     from psp.Pv import Pv 
@@ -18,9 +23,7 @@ try:
     # print('using epics.pv')
 except ModuleNotFoundError:
     print('no epics pv support located within environment')
-import sys
-import random  # random number generator for secondary calibration
-from scipy.optimize import leastsq # for secondary calibration
+
 from support import watchdog3 as watchdog
 from support.femtoconfig import Config
 # import support.tic.TimeIntervalCounter
@@ -33,22 +36,40 @@ from support.ErrorOutput import error_output
 from support.laserlockerversions.Gen1LaserLocker import LaserLocker as Gen1LaserLocker
 from support.laserlockerversions.Gen2LaserLocker import LaserLocker as Gen2LaserLocker
 from support.Trigger import Trigger
-import pdb
 
-def fitres(param, tin, tout):  # tin isinput time, tout is measured, param is parameters    
+def fitres(param, tin, tout):
+    """ Compute error in calibration fit.
+
+    Arguments: 
+    tin -- is input time
+    tout -- measured
+    param -- parameters for fit
+    """
     sa,ca = param  # sine and cosine amplitudes
     err= tout - ffun(tin, sa, ca)
     return err
         
 def ffun( x, a, b):
+    """ Support function for fitres.
+    
+    Arguments:
+    x -- 
+    a --
+    b --
+    """
     w0 = 2.600*2*numpy.pi
     out = a*numpy.sin(x * w0) + b * numpy.cos(x*w0)
     return out        
 
-
 def femto(config_fpath='NULL'):
-    """ The parent logical object for an instance of femto.py; initializes
-    objects and manages the run loop."""
+    """ Script-like main function for an instance of the laser locker HLA.
+    
+    The parent logical object for an instance of femto.py; initializes
+    objects and manages the run loop. Intended to be launched from commandline via control system processes and manual control.
+    
+    Arguments:
+    config_fpath -- path to a configuration file to load that describes the PV structure an installation
+    """
     config = Config()
     P = PVS(config_fpath,epicsdebug=False,localdebug=True)
     if P.OK == 0:
@@ -64,18 +85,14 @@ def femto(config_fpath='NULL'):
         beamFind_enabled = True
     else:
         beamFind_enabled = False
-    # L = locker(P,W) #set up locking system parameters
     L.locker_status()  # check locking sysetm / laser status
     P.E.write_error( {"value":L.message,"lvl":2})
     T = Trigger(P)
     T.get_ns()
-#   C = time_interval_counter(P)  # time interval counter device
     if "deg_conversion_freq" in P.config.config["add_config"]:
         D = degrees_s(P,P.config.config["add_config"]["deg_conversion_freq"]) # manages conversion of degrees to ns and back
     else:
         D = degrees_s(P,2.856)
-#    C.get_time()
-#    pdb.set_trace()
     while W.error ==0:   # MAIN PROGRAM LOOP
         time.sleep(0.2)
         try:   # the never give up, never surrunder loop. 
@@ -90,6 +107,7 @@ def femto(config_fpath='NULL'):
                 time.sleep(0.5)  # to keep the loop from spinning too fast
                 continue            #just try again if the laser isn't ready
             #if beamFind_enabled:
+            # This functionality is currently disabled pending more testing for LCLS-II high rate operation
             #    L.findBeam()
             if P.get('calibrate'):
                 P.E.write_error({'value':'calib requested',"lvl":2})
@@ -125,8 +143,7 @@ def femto(config_fpath='NULL'):
                 L.set_time() # set time read earlier    
             D.run()  # deals with degreees S band conversion    
         except:   # catch any otherwise uncaught error.
-            P.E.write_error({'value':str(sys.exc_info()[0]),"lvl":2}) # print error I hope)
-            # del P  #does this work?
+            P.E.write_error({'value':str(sys.exc_info()[0]),"lvl":2})
             P.E.write_error({'value':'UNKNOWN ERROR, trying again',"lvl":2})
             P = PVS(config_fpath,epicsdebug=False,localdebug=False)
             if P.OK == 0:
@@ -138,8 +155,6 @@ def femto(config_fpath='NULL'):
                 L = Gen2LaserLocker(P.E,P,W)
             else:
                 L = Gen1LaserLocker(P.E,P,W)
-            # W = watchdog.watchdog(P.pvlist['watchdog'])
-            # L = locker(P, W) #set up locking system parameters
             L.locker_status()  # check locking sysetm / laser status
             P.E.write_error({'value':L.message,"lvl":2})
             T = Trigger(P)
@@ -148,6 +163,16 @@ def femto(config_fpath='NULL'):
 
 
 if __name__ == "__main__":
+    """ Run femto.py via commandline.
+    
+    The HLA is designed to be launched via mechanisms deployed on the various
+    control systems for issuing scripts (like the AD "watchers"). As such, the
+    command line values are limited, and only limited error handling is provided
+    here. While there are more robust commandline argument handlers, for
+    backwards compatibility, this design is limited.
+
+    Arguments: sys.argv[1] -- config file path relative to femto.py directory
+    """
     if len(sys.argv) < 2:
         femto()  # null input will prompt
     else:

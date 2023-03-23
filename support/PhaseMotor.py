@@ -1,11 +1,27 @@
+""" The phasemotor class implements some middle layer logic for requesting phase shifts.
+
+Justin May
+"""
+
 import time
 import pdb
 
 class PhaseMotor(object):
-    """The PhaseMotor class encapsulates the functionality of the phase control
-    for a laser."""
+    """ Object to communicate with phase motors.
     
-    def __init__(self, P): # P holds motor PVs (already open)
+    The PhaseMotor class encapsulates the functionality of the phase control
+    for a laser.
+    """
+    
+    def __init__(self, P): 
+        """ Initialize the object based on existing configuration.
+        
+        This uses a PV set passed to the class that has already been created.
+
+        Arguments:
+        P -- holds motor PVs (already open)
+        """
+        
         self.scale = .001 # motor is in ps, everthing else in ns
         self.P = P
         self.max_tries = 100
@@ -16,6 +32,14 @@ class PhaseMotor(object):
         self.wait_for_stop()  # wait until it stops moving
 
     def wait_for_stop(self):
+        """ Hold execution until a move is not underway.
+        
+        The logical implication of this function is different depending on
+        whether it is talking to a SIM or ATCA system, but the end result is
+        largely the same, in part because the design of the MForce and SmarAct
+        connections has been designed to look similar.
+        
+        """
         #print('wait for stop')
         # J.May (4/7/22): This isn't quite true, but we also don't get a phase readback, so I'm leaving this for now, even though one still needs a check against actual movement
         if self.P.config.is_atca: # ATCA shifts are instantaneous (~2 seconds maximum)
@@ -38,9 +62,11 @@ class PhaseMotor(object):
                 posrb = self.P.get('phase_motor_rb') * self.scale  # position in nanoseconds
                 if abs(posrb - self.position) < self.tolerance:  # are we within range
                    break
-            time.sleep(self.loop_delay)        
+            time.sleep(self.loop_delay)
 
-    def move(self, pos): # move motor to new position (no wait).
+    def move(self, pos):
+        """ move motor to new position (no wait)."""
+
         #self.P.pvlist['phase_motor'].put(value=pos / self.scale, timeout = 10.0)  # allow long timeout for motor move
         # pdb.set_trace()
         self.P.put('phase_motor', pos/self.scale) # motor move if needed
@@ -48,8 +74,9 @@ class PhaseMotor(object):
         self.position = pos  # requested position in ns
         self.wait_for_stop() # check
          
-
     def get_position(self):
+        """ Return position for phase motor including wait_for_stop."""
+        
         self.wait_for_stop() # wait until it stops moving
         self.position = self.scale * self.P.get('phase_motor')  # get position data
         return self.position     

@@ -1,4 +1,9 @@
-#watchdog.py
+""" Extracted version of original watchdog function. This was updated to be
+Python3 compatible in the module watchdog3.py. Provided for historical
+reference.
+
+Justin May
+"""
 
 import time  #includes sleep command to wait for other users
 class watchdog():

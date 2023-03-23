@@ -1,17 +1,23 @@
+""" Implementation of PV generation using a snapshot of the original hard-coded
+PVs in the original femto.py. Used primarily for unit testing configuration
+files for each facility.
+
+Justin May
+"""
+
 import time
 import math
-#from pylab import *
-import plotly
-import numpy
-# import watchdog
-#from psp.Pv import Pv
-from epics import PV as Pv # switching in this lib, doesn't necessarily match online version
 import sys
 import random  # random number generator for secondary calibration
+
+import numpy
 from scipy.optimize import leastsq # for secondary calibration
+from epics import PV as Pv # switching in this lib, doesn't necessarily match online version
+
 from support.femtoconfig import Config
 
-class PVS():   # creates pvs
+class PVS():
+    """ creates pvs."""
     def __init__(self, nx='NULL'):
         #self.config = Config()
         #self.config.readConfig("configs/astagen1.json")
