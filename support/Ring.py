@@ -16,7 +16,7 @@ class Ring(object):
         """ Create a ring buffer with size
           
         Arguments:
-        sz -- length of buffer
+            sz : length of buffer
         """
         
         self.sz = sz  # hold size of ring
@@ -29,7 +29,7 @@ class Ring(object):
         """ adds element to ring.
         
         Arguments:
-        x -- value to add
+            x : value to add
         """
 
         self.ptr = np.mod(self.ptr+1,self.sz)        

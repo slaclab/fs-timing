@@ -4,10 +4,22 @@ import pdb
 from ..Ring import Ring as ring
 
 class Keysight(object):
-    """ Instance of the time interval counter object that supports the 53220 and 53230 models from Keysight, which do not have measurement statistics functions."""
+    """ Combined function time interval and frequency counter.
+    
+    Instance of the time interval counter object that supports the 53220 and
+    53230 models from Keysight, which do not have measurement statistics
+    functions. As a result, some additional data aggregation is needed at the
+    software level."""
 	
     def __init__(self, P):
-        """ Specific initialization that uses internal deque (ring) to calculate jitter."""
+        """ Initialze counter object using PVS reference.
+        
+        Specific initialization that uses internal deque (ring) to calculate jitter.
+        
+        Arguments:
+            P : PVS object
+        """
+        
         self.scale = 1e9 # scale relative to nanoseconds
         self.P = P
         self.good = 1 

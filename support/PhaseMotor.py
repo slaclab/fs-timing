@@ -19,7 +19,7 @@ class PhaseMotor(object):
         This uses a PV set passed to the class that has already been created.
 
         Arguments:
-        P -- holds motor PVs (already open)
+            P : holds motor PVs (already open)
         """
         
         self.scale = .001 # motor is in ps, everthing else in ns
@@ -65,7 +65,11 @@ class PhaseMotor(object):
             time.sleep(self.loop_delay)
 
     def move(self, pos):
-        """ move motor to new position (no wait)."""
+        """ move motor to new position (no wait).
+        
+        Arguments:
+            pos : requested position
+        """
 
         #self.P.pvlist['phase_motor'].put(value=pos / self.scale, timeout = 10.0)  # allow long timeout for motor move
         # pdb.set_trace()

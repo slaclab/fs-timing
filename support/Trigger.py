@@ -17,7 +17,7 @@ class Trigger(object):
         """ Initialize a trigger connection based on the provided PV.
         
         Arguments:
-        P -- PV object
+            P : PV object
         """
         
         self.P = P
@@ -37,7 +37,7 @@ class Trigger(object):
         """ Set TDES.
         
         Arguments:
-        t -- trigger time to set
+            t : trigger time to set
         """
         
         self.time = t/self.scale
@@ -52,7 +52,7 @@ class Trigger(object):
         """ Set TWID.
         
         Arguments:
-        wid -- trigger width to set
+            wid : trigger width to set
         """
 
         self.P.put('laser_trigger_width', wid)

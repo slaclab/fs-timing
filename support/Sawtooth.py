@@ -24,10 +24,10 @@ class Sawtooth(object):
         roundabout way to do it as opposed to say, using Scipy.signals
 
         Arguments: 
-        t0 -- an array of inputs that represent the phase shift time
-        t_trig -- the EVR trigger time
-        delay -- the cable length after the trigger 
-        offset -- the delay from the photodiode to the time interval counter
+            t0 : an array of inputs that represent the phase shift time
+            t_trig : the EVR trigger time
+            delay : the cable length after the trigger 
+            offset : the delay from the photodiode to the time interval counter
         """
         
         trig_out = t_trig + delay

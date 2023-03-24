@@ -17,9 +17,10 @@ class error_output():
     def __init__(self, pv, epicsLogLvl=0,localLogLvl=0):
         """ Configure output for error messages.
         
-        Arguments: pv -- the pv in the control system to write to 
-        epicsLogLvl -- selector for what severity to report to the epics pv 
-        localLogLvl -- selector for what severity to report to the commandline
+        Arguments: 
+            pv : the pv in the control system to write to 
+            epicsLogLvl : selector for what severity to report to the epics pv 
+            localLogLvl : selector for what severity to report to the commandline
         """
 
         self.pv = pv  # Local connection to error reporting pv
@@ -38,7 +39,7 @@ class error_output():
         the object, depending on the configured severity level selection.
 
         Arguments:
-        error -- text string to write to pv or commandline based on configuration
+            error : text string to write to pv or commandline based on configuration
         """
 
         if error:

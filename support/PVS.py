@@ -34,9 +34,9 @@ class PVS():   # creates pvs
         configuration definition.
         
         Arguments:
-        configfpath -- path to a configuration file, provided at launch of femto.py
-        epicsdebug -- boolean value for whether to write errors to epics
-        localdebug -- boolean value for whether to print errors to local
+            configfpath : path to a configuration file, provided at launch of femto.py
+            epicsdebug : boolean value for whether to write errors to epics  
+            localdebug : boolean value for whether to print errors to local
         """
 
         self.localLogLvl = 0
@@ -94,7 +94,7 @@ class PVS():   # creates pvs
         This fetches a value from the supplied PV and returns it or an error.
         
         Arguments:
-        name -- name of the pv created in femtoconfig
+            name : name of the pv created in femtoconfig
         """
 
         try:
@@ -112,7 +112,7 @@ class PVS():   # creates pvs
         for a pv (by femtoconfig name) in lieu of issuing a channel access call.
 
         Arguments:
-        name -- name of the pv created in femtoconfig
+            name : name of the pv created in femtoconfig
         """
 
         return self.config.pvlist[name].value                
@@ -124,8 +124,8 @@ class PVS():   # creates pvs
         based on the name as defined in femtoconfig.
         
         Arguments:
-        name -- name of the pv created in femtoconfig
-        x -- value to write to pv in string format
+            name : name of the pv created in femtoconfig
+            x : value to write to pv in string format
         """
 
         try:

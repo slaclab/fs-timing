@@ -14,8 +14,8 @@ class degrees_s():
         """ Initialize a degrees conversion opject with PV assignments and conversion.
 
         Arguments:
-        P -- the PV maintenace object
-        freq -- the fundamental reference frequency chosen for a given system
+            P : the PV maintenace object
+            freq : the fundamental reference frequency chosen for a given system
         """
 
         self.P = P

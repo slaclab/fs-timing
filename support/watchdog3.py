@@ -23,7 +23,7 @@ class watchdog():
         that imply certain control system states.
         
         Arguments:
-        pv -- a direct link to a watchdog PV
+            pv : a direct link to a watchdog PV
         """
 
         self.pv = pv

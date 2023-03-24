@@ -7,6 +7,15 @@ class TimeIntervalCounter(object):
 
     # class time_interval_counter():  # reads interval counter data, gets raw or average as needed
     def __init__(self, P):
+        """ Generate default time interval counter object.
+        
+        This is an implementation appropriate for typical installations using
+        the SR620 Time Interval Counter.
+        
+        Arguments:
+            P : PVS Object
+        """
+
         self.scale = 1e9 # scale relative to nanoseconds
         self.P = P
         self.good = 1 
@@ -17,6 +26,7 @@ class TimeIntervalCounter(object):
         self.range = 0 # range of data
         
     def get_time(self):
+        """ Retrieve measured time from device. """
         self.good = 0  # assume bad unless we fall through all the traps
         self.range = 0 # until we overwrite
         tol = self.P.get('counter_jitter_high')
