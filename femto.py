@@ -11,6 +11,14 @@ import sys
 import random  # random number generator for secondary calibration
 import pdb
 
+# imports for memory leak investigation
+import threading
+from pathlib import Path
+import datetime
+import tracemalloc
+tracemalloc.start()
+tracerun = True
+
 import numpy
 from scipy.optimize import leastsq # for secondary calibration
 # from pylab import *
@@ -59,7 +67,13 @@ def ffun( x, a, b):
     """
     w0 = 2.600*2*numpy.pi
     out = a*numpy.sin(x * w0) + b * numpy.cos(x*w0)
-    return out        
+    return out
+
+def dump_tracemalloc():
+    while tracerun:
+        time.sleep(30.0)
+        # tracemalloc.dump(Path("/home/fphysics/jemay/data/malloc/",f'dump_%s'%(datetime.datetime.now().strftime("%Y%m%d_%H_%M_%S_%f"))))
+        tracemalloc.take_snapshot().dump(str(Path(r"C:\Users\jemay\Documents\_Core\_Work_Local\_Data_Local\malloc_test",'dump_%s'%(datetime.datetime.now().strftime("%Y%m%d_%H_%M_%S_%f")))))
 
 def femto(config_fpath='NULL'):
     """ Script-like main function for an instance of the laser locker HLA.
@@ -70,6 +84,8 @@ def femto(config_fpath='NULL'):
     Arguments:
     config_fpath -- path to a configuration file to load that describes the PV structure an installation
     """
+    tracemallocthread = threading.Thread(None,target=dump_tracemalloc)
+    tracemallocthread.start()
     config = Config()
     P = PVS(config_fpath,epicsdebug=False,localdebug=True)
     if P.OK == 0:
@@ -159,7 +175,8 @@ def femto(config_fpath='NULL'):
             P.E.write_error({'value':L.message,"lvl":2})
             T = Trigger(P)
             T.get_ns()
-    P.E.write_error({'value':'done, exiting',"lvl":2})        
+    P.E.write_error({'value':'done, exiting',"lvl":2})
+    tracerun = False        
 
 
 if __name__ == "__main__":
